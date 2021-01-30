@@ -2,6 +2,8 @@ import socket
 import threading
 import json
 import sqlite3
+from sqlite3 import OperationalError
+import os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
@@ -67,9 +69,13 @@ class Echo():
 			threading.Thread(target=clientConnectionThread, args=(conn,addr)).start() # Start a new thread for the client
 
 	def initDB(self):
-
-		self.dbconn = sqlite3.connect(r"data/database.db", check_same_thread=False) # Connect to the database
-		self.cursor = self.dbconn.cursor() # Setup sqlite cursor
+		if os.path.exists("data"):
+			self.dbconn = sqlite3.connect(r"data/database.db", check_same_thread=False) # Connect to the database
+			self.cursor = self.dbconn.cursor() # Setup sqlite cursor
+		else:
+			os.mkdir("data")
+			self.dbconn = sqlite3.connect(r"data/database.db", check_same_thread=False) # Connect to the database
+			self.cursor = self.dbconn.cursor() # Setup sqlite cursor
 
 		tables = [
 		    {
