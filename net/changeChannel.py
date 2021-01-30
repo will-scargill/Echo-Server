@@ -33,5 +33,8 @@ def handle(conn, addr, currentUser, server, data):
 		for eID in server.channels[data["data"]]:
 			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
 
+		# Send message history
+		
+
 	else:
 		sendMessage(conn, currentUser.secret, "errorOccured", "invalidChannel")

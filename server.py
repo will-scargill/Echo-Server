@@ -80,7 +80,8 @@ def ClientConnectionThread(conn, addr):
                         changeChannel.handle(conn, addr, currentUser, server, data)
         except ConnectionResetError:
             print("Received illegal disconnect from client " + str(addr))
-            conn.close()
+            disconnect.handle(conn, addr, currentUser, server, data)
+            connectionValid = False
     else:
         print("Client " + str(addr) + " failed handshake");
         sendMessage(conn, userSecret, "CRDenied", connInvalidReason)
