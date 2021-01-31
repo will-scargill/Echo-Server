@@ -4,7 +4,7 @@ from net.sendMessage import sendMessage
 
 
 def handle(conn, addr, currentUser, server, data):
-	server.cursor.execute("SELECT COUNT(*) FROM chathistory WHERE channel=?",[currentUser.channel])
+	server.cursor.execute("SELECT COUNT(*) FROM chatHistory WHERE channel=?",[currentUser.channel])
 	numInChannel = (server.cursor.fetchall())[0][0]
 	currentLoaded = currentUser.timesRequestedHistory * 50
 	if currentLoaded >= numInChannel:

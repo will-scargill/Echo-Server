@@ -9,13 +9,14 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 
 class Echo():
-	def __init__(self, name, ip, port, password, channels, motd, nums):
+	def __init__(self, name, ip, port, password, channels, motd, nums, compatibleClientVers):
 		self.ip = ip
 		self.port = port
 		self.name = name
 		self.motd = motd
 		self.password = password
 		self.users = {}
+		self.compatibleClientVers = compatibleClientVers
 
 		self.channels = {}
 		for c in channels:
@@ -84,22 +85,22 @@ class Echo():
 		    },
 		    {
 		        "name": "userRoles",
-		        "columns": "eID TEXT, flags TEXT, permLevel TEXT"
+		        "columns": "eID TEXT, roles TEXT"
 		    },
 		    {
-		        "name": "chatlogs",
+		        "name": "chatLogs",
 		        "columns": "eID TEXT, IP TEXT, username TEXT, channel TEXT, date TEXT, message TEXT"
 		    },
 		    {
-		        "name": "commandlogs",
+		        "name": "commandLogs",
 		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT, reason TEXT"
 		    },
 		    {
-		        "name": "pmlogs",
+		        "name": "pmLogs",
 		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, message TEXT"
 		    },
 		    {
-		        "name": "chathistory",
+		        "name": "chatHistory",
 		        "columns": "username TEXT, channel TEXT, date TEXT, message TEXT, colour TEXT, realtime INTEGER"
 		    }
 		]
@@ -149,6 +150,6 @@ class Echo():
 		return users
 
 	def GetBasicChannelHistory(self, channel, limit):
-		self.cursor.execute("SELECT * FROM (SELECT * FROM chathistory WHERE channel=? ORDER BY realtime DESC LIMIT ?) ORDER BY realtime ASC", [channel, limit])
+		self.cursor.execute("SELECT * FROM (SELECT * FROM chatHistory WHERE channel=? ORDER BY realtime DESC LIMIT ?) ORDER BY realtime ASC", [channel, limit])
 		channelHistory = self.cursor.fetchall()
 		return channelHistory

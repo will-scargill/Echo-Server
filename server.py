@@ -56,6 +56,10 @@ def ClientConnectionThread(conn, addr):
             connInvalidReason = "Invalid eID"
             connectionValid = False
             print("Client " + str(addr) + " tried to join but was already connected from the same device")
+        if connectionRequest[2] not in server.compatibleClientVers:
+            connInvalidReason = "Incompatible Client version"
+            connectionValid = False
+            print("Client " + str(addr) + " tried to join but was has an incompatible client version")
         validUsername = server.ValidUsername(currentUser)
         currentUser.username = validUsername
         
@@ -96,8 +100,10 @@ password = config.GetSetting("password", "Server")
 port = config.GetSetting("port", "Server")
 clientnums = config.GetSetting("clientnum", "Server")
 motd = config.GetSetting("motd", "Server")
+compatibleClientVers = config.GetSetting("compatibleClientVers", "Server")
 
-server = echo.Echo(name, "127.0.0.1", port, password, channels, motd, clientnums)
+
+server = echo.Echo(name, "127.0.0.1", port, password, channels, motd, clientnums, compatibleClientVers)
 server.initDB()
 server.StartServer(ClientConnectionThread)
 
