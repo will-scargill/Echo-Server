@@ -1,8 +1,6 @@
 import json
 import datetime
 
-import json
-
 from net.sendMessage import sendMessage
 
 def handle(conn, addr, currentUser, server, command):
@@ -25,5 +23,6 @@ def handle(conn, addr, currentUser, server, command):
 				metadata = ["Server", "#0000FF", dt]
 
 				sendMessage(currentUser.conn, currentUser.secret, "commandData", json.dumps(userData), subtype="multiLine", metadata=metadata)
+				break
 	except IndexError:
 		pass

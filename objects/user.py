@@ -7,3 +7,4 @@ class User():
 		self.conn = conn
 		self.channel = None
 		self.timesRequestedHistory = 0
+		self.connectionValid = True

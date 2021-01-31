@@ -40,25 +40,25 @@ def ClientConnectionThread(conn, addr):
 
         currentUser = user.User(data["userid"], connectionRequest[0], userSecret, addr, conn)
 
-        connectionValid = True
+        currentUser.connectionValid = True
         validPassword = server.Authenticate(connectionRequest[1]);
         if validPassword == False:
             connInvalidReason = "Incorrect Password"
-            connectionValid = False
+            currentUser.connectionValid = False
             print("Client " + str(addr) + " used incorrect password")
         isNotBanned = server.IsNotBanned(currentUser)
         if isNotBanned == False:
             connInvalidReason = "You are banned from this server"
-            connectionValid = False
+            currentUser.connectionValid = False
             print("Client " + str(addr) + " tried to join but was banned")
         validID = server.ValidID(currentUser)
         if validID == False:
             connInvalidReason = "Invalid eID"
-            connectionValid = False
+            currentUser.connectionValid = False
             print("Client " + str(addr) + " tried to join but was already connected from the same device")
         if connectionRequest[2] not in server.compatibleClientVers:
             connInvalidReason = "Incompatible Client version"
-            connectionValid = False
+            currentUser.connectionValid = False
             print("Client " + str(addr) + " tried to join but was has an incompatible client version")
         validUsername = server.ValidUsername(currentUser)
         currentUser.username = validUsername
@@ -66,13 +66,13 @@ def ClientConnectionThread(conn, addr):
     except ConnectionResetError:
         print("Client " + str(addr) + " disconnected during handshake")
     
-    if connectionValid == True:
+    if currentUser.connectionValid == True:
         try:
             sendMessage(conn, userSecret, "CRAccepted", "")
             server.AddUser(currentUser)
             sendMessage(conn, userSecret, "serverData", server.packagedData)
             print("Client " + str(addr) + " completed handshake")
-            while connectionValid:
+            while currentUser.connectionValid:
                     byteData = conn.recv(1024)
                     data = encoding.DecodeEncrypted(byteData, currentUser.secret)
                     print("Received messagetype " + data["messagetype"] + " from client " + str(addr))
@@ -88,11 +88,17 @@ def ClientConnectionThread(conn, addr):
         except ConnectionResetError:
             print("Received illegal disconnect from client " + str(addr))
             disconnect.handle(conn, addr, currentUser, server, data)
-            connectionValid = False
+            currentUser.connectionValid = False
+        except ConnectionAbortedError:
+            # This should only happen if a client is kicked/banned
+            # Due to method of implementation, client disconnects itself before the server can disconnect the client
+            pass
     else:
         print("Client " + str(addr) + " failed handshake");
         sendMessage(conn, userSecret, "CRDenied", connInvalidReason)
-        conn.close()       
+        conn.close()
+
+    conn.close()
 
 name = config.GetSetting("name", "Server")
 channels = config.GetSetting("channels", "Server")

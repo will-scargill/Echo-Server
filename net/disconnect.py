@@ -12,7 +12,8 @@ def handle(conn, addr, currentUser, server, data):
 
 		for eID in server.channels[currentUser.channel]:
 			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
-			
+		
+	currentUser.connectionValid = False
 	conn.close()
 
 	
