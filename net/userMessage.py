@@ -4,11 +4,14 @@ import datetime
 from net.sendMessage import sendMessage
 from modules.colorhash import ColorHash
 from modules import logger
+from modules import commandParser
 
 def handle(conn, addr, currentUser, server, data):
-	if currentUser.channel == None:
+	if data["data"][0] == "/": # Command 
+		commandParser.parse(conn, addr, currentUser, server, data)
+	elif currentUser.channel == None:
 		pass
-	else:
+	else: # Message
 		mChannel = currentUser.channel
 		channelUsers = server.channels[mChannel]
 		colour = ColorHash(currentUser.username)
