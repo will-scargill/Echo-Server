@@ -100,7 +100,7 @@ class Echo():
 		    },
 		    {
 		        "name": "chathistory",
-		        "columns": "username TEXT, channel TEXT, message TEXT, colour TEXT, realtime INTEGER"
+		        "columns": "username TEXT, channel TEXT, date TEXT, message TEXT, colour TEXT, realtime INTEGER"
 		    }
 		]
 
@@ -147,3 +147,8 @@ class Echo():
 			users.append(self.users[eID].username)
 
 		return users
+
+	def GetBasicChannelHistory(self, channel, limit):
+		self.cursor.execute("SELECT * FROM (SELECT * FROM chathistory WHERE channel=? ORDER BY realtime DESC LIMIT ?) ORDER BY realtime ASC", [channel, limit])
+		channelHistory = self.cursor.fetchall()
+		return channelHistory

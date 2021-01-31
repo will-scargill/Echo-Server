@@ -5,7 +5,7 @@ from net.sendMessage import sendMessage
 
 def handle(conn, addr, currentUser, server, data):
 	if data["data"] in server.channels:
-
+		currentUser.timesRequestedHistory = 1
 		
 		if currentUser.channel == None:
 			firstJoin = True
@@ -34,7 +34,9 @@ def handle(conn, addr, currentUser, server, data):
 			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
 
 		# Send message history
-		
+
+		channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50);
+		sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory));
 
 	else:
 		sendMessage(conn, currentUser.secret, "errorOccured", "invalidChannel")

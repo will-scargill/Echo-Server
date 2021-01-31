@@ -6,4 +6,4 @@ class User():
 		self.addr = addr
 		self.conn = conn
 		self.channel = None
-		self.colour = None
+		self.timesRequestedHistory = 0

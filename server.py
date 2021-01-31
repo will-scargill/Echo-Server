@@ -15,6 +15,7 @@ from net.sendMessage import sendMessage
 from net import changeChannel
 from net import userMessage
 from net import disconnect
+from net import historyRequest
 
 def ClientConnectionThread(conn, addr):
     try:
@@ -78,6 +79,8 @@ def ClientConnectionThread(conn, addr):
                         userMessage.handle(conn, addr, currentUser, server, data) 
                     elif data["messagetype"] == "changeChannel":
                         changeChannel.handle(conn, addr, currentUser, server, data)
+                    elif data["messagetype"] == "historyRequest":
+                        historyRequest.handle(conn, addr, currentUser, server, data)
         except ConnectionResetError:
             print("Received illegal disconnect from client " + str(addr))
             disconnect.handle(conn, addr, currentUser, server, data)
