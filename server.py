@@ -108,9 +108,10 @@ port = config.GetSetting("port", "Server")
 clientnums = config.GetSetting("clientnum", "Server")
 motd = config.GetSetting("motd", "Server")
 compatibleClientVers = config.GetSetting("compatibleClientVers", "Server")
+strictBanning = config.GetSetting("strictBanning", "Server")
 
 
-server = echo.Echo(name, "127.0.0.1", port, password, channels, motd, clientnums, compatibleClientVers)
+server = echo.Echo(name, "127.0.0.1", port, password, channels, motd, clientnums, compatibleClientVers, strictBanning)
 server.initDB()
 server.StartServer(ClientConnectionThread)
 

@@ -12,7 +12,7 @@ from Crypto.Cipher import AES
 from modules import commandParser
 
 class Echo():
-	def __init__(self, name, ip, port, password, channels, motd, nums, compatibleClientVers):
+	def __init__(self, name, ip, port, password, channels, motd, nums, compatibleClientVers, strictBanning):
 		self.ip = ip
 		self.port = port
 		self.name = name
@@ -20,6 +20,7 @@ class Echo():
 		self.password = password
 		self.users = {}
 		self.compatibleClientVers = compatibleClientVers
+		self.strictBanning = strictBanning
 
 		self.channels = {}
 		for c in channels:
@@ -146,8 +147,17 @@ class Echo():
 		return newUser.username
 
 	def IsNotBanned(self, user):
-		# Always returns true for now cause i havent done database, cross reference ip and eID
-		return True
+		if self.strictBanning == "True":
+			print("one")
+			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=? OR IP=?",[user.eID, user.addr[0]])
+		else:
+			print("two")
+			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=?",[user.eID])
+		matchingUsers = self.cursor.fetchall()
+		if len(matchingUsers) > 0:
+			return False
+		else:
+			return True
 
 	def IsValidCommand(self, command):
 		commandsConfig = {}
@@ -164,7 +174,7 @@ class Echo():
 			commandsToFlags = json.load(commandsFile)
 
 		commandFlag = commandsToFlags[command]
-		
+
 		if commandFlag == "*":
 			return True
 

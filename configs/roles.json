@@ -1,4 +1,5 @@
 {
 "moderator": ["w", "k"],
+"ban": ["b"],
 "admin": ["a"]
 }
