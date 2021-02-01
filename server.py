@@ -89,10 +89,11 @@ def ClientConnectionThread(conn, addr):
             print("Received illegal disconnect from client " + str(addr))
             disconnect.handle(conn, addr, currentUser, server, data)
             currentUser.connectionValid = False
-        except ConnectionAbortedError:
-            # This should only happen if a client is kicked/banned
-            # Due to method of implementation, client disconnects itself before the server can disconnect the client
-            pass
+        except ConnectionAbortedError as e:
+            if currentUser.connectionValid == False:
+                pass
+            else:
+                print(e)
     else:
         print("Client " + str(addr) + " failed handshake");
         sendMessage(conn, userSecret, "CRDenied", connInvalidReason)

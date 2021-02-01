@@ -164,6 +164,9 @@ class Echo():
 			commandsToFlags = json.load(commandsFile)
 
 		commandFlag = commandsToFlags[command]
+		
+		if commandFlag == "*":
+			return True
 
 		roleList = {}
 		with open(r"configs/roles.json", "r") as roleFile:
