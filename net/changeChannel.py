@@ -23,7 +23,7 @@ def handle(conn, addr, currentUser, server, data):
 			channelUsers = json.dumps(server.GetChannelUsers(oldChannel))
 
 			for eID in server.channels[oldChannel]:
-				sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
+				sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers)
 
 
 		# Update users in the new channel
@@ -31,12 +31,12 @@ def handle(conn, addr, currentUser, server, data):
 		channelUsers = json.dumps(server.GetChannelUsers(data["data"]))
 
 		for eID in server.channels[data["data"]]:
-			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
+			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers)
 
 		# Send message history
 
 		channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50);
-		sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory));
+		sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory))
 
 	else:
 		sendMessage(conn, currentUser.secret, "errorOccured", "invalidChannel")

@@ -16,6 +16,7 @@ from net import changeChannel
 from net import userMessage
 from net import disconnect
 from net import historyRequest
+from net import leaveChannel
 
 def ClientConnectionThread(conn, addr):
     try:
@@ -41,6 +42,11 @@ def ClientConnectionThread(conn, addr):
         currentUser = user.User(data["userid"], connectionRequest[0], userSecret, addr, conn)
 
         currentUser.connectionValid = True
+        isServerFull = server.IsServerFull()
+        if isServerFull:
+            connInvalidReason = "Server is full"
+            currentUser.connectionValid = False
+            print("Client " + str(addr) + " tried to join but the server was full")
         validPassword = server.Authenticate(connectionRequest[1]);
         if validPassword == False:
             connInvalidReason = "Incorrect Password"
@@ -85,6 +91,8 @@ def ClientConnectionThread(conn, addr):
                         changeChannel.handle(conn, addr, currentUser, server, data)
                     elif data["messagetype"] == "historyRequest":
                         historyRequest.handle(conn, addr, currentUser, server, data)
+                    elif data["messagetype"] == "leaveChannel":
+                        leaveChannel.handle(conn, addr, currentUser, server, data)
         except ConnectionResetError:
             print("Received illegal disconnect from client " + str(addr))
             disconnect.handle(conn, addr, currentUser, server, data)

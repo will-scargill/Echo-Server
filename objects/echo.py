@@ -1,3 +1,4 @@
+
 import socket
 import threading
 import json
@@ -70,7 +71,7 @@ class Echo():
 
 		print("Listening on " + str(self.ip) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
 
-		self.serverSocket.listen(self.numClients)
+		self.serverSocket.listen(5)
 		while self.recvControl == True:
 			conn, addr = self.serverSocket.accept()
 			threading.Thread(target=clientConnectionThread, args=(conn,addr)).start() # Start a new thread for the client
@@ -151,13 +152,18 @@ class Echo():
 			print("one")
 			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=? OR IP=?",[user.eID, user.addr[0]])
 		else:
-			print("two")
 			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=?",[user.eID])
 		matchingUsers = self.cursor.fetchall()
 		if len(matchingUsers) > 0:
 			return False
 		else:
 			return True
+
+	def IsServerFull(self):
+		if len(self.users) >= self.numClients:
+			return True
+		else:
+			return False
 
 	def IsValidCommand(self, command):
 		commandsConfig = {}
