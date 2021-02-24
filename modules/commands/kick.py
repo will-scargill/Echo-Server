@@ -1,5 +1,6 @@
 import json
 import datetime
+from logzero import logger
 
 from net.sendMessage import sendMessage
 from net import disconnect
@@ -15,7 +16,7 @@ def handle(conn, addr, currentUser, server, command):
 				if target == v.username:
 					sendMessage(v.conn, v.secret, "connectionTerminated", kickReason, subtype="kick")
 
-					print("Client " + str(v.addr) + " was kicked from the server")
+					logger.info("Client " + str(v.addr) + " was kicked from the server")
 
 					del server.users[v.eID]
 					if v.channel != None:

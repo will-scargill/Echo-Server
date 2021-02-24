@@ -2,5 +2,10 @@
 "whois": "w",
 "kick": "k",
 "ban": "b",
-"pm": "*"
+"mute": "m",
+"unmute": "u",
+"modify": "M",
+"pm": "*",
+"self": "*",
+"getroles": "g"
 }

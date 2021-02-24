@@ -1,5 +1,6 @@
 import json
 import datetime
+from logzero import logger
 
 from net.sendMessage import sendMessage
 from net import disconnect
@@ -16,7 +17,7 @@ def handle(conn, addr, currentUser, server, command):
 					if server.IsNotBanned(v):
 						sendMessage(v.conn, v.secret, "connectionTerminated", banReason, subtype="kick")
 
-						print("Client " + str(v.addr) + " was banned from the server")
+						logger.info("Client " + str(v.addr) + " was banned from the server")
 
 						del server.users[v.eID]
 						if v.channel != None:

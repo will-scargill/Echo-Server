@@ -1,5 +1,6 @@
 import json
 import datetime
+import ast
 
 from net.sendMessage import sendMessage
 
@@ -17,6 +18,16 @@ def handle(conn, addr, currentUser, server, command):
 					userData.append("No channel")
 				else:
 					userData.append("Channel: " + v.channel)
+
+				server.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[v.eID])
+				try:
+					userRoles = (list(server.cursor.fetchall()))[0][0]
+					userRoles = ast.literal_eval(userRoles)
+				except IndexError:
+					return False
+
+				for role in userRoles:
+					userData.append("Role: " + role)
 
 				currentDT = datetime.datetime.now()
 				dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))

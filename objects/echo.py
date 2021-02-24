@@ -4,6 +4,7 @@ import threading
 import json
 import sqlite3
 from sqlite3 import OperationalError
+from logzero import logger
 import os
 import ast
 from Crypto.PublicKey import RSA
@@ -46,7 +47,7 @@ class Echo():
 		    fileIn = open(r"data/private.pem", "rb")
 		    fileIn.close()
 		except: # If they don't, generate RSA keys
-		    print("Rsa keys not found, generating...")
+		    logger.warning("Rsa keys not found, generating...")
 		    exec(open("regenerateRsaKeys.py").read())
 
 		fileIn = open(r"data/private.pem", "rb") # Read private key
@@ -69,7 +70,7 @@ class Echo():
 		self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.serverSocket.bind((self.ip, int(self.port)))
 
-		print("Listening on " + str(self.ip) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
+		logger.info("Listening on " + str(self.ip) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
 
 		self.serverSocket.listen(5)
 		while self.recvControl == True:
@@ -120,7 +121,7 @@ class Echo():
 
 	def StopServer(self):
 		self.recvControl = False
-		print("Server Stopped")
+		logger.info("Server Stopped")
 
 	def AddUser(self, user):
 		self.users[user.eID] = user
@@ -149,7 +150,6 @@ class Echo():
 
 	def IsNotBanned(self, user):
 		if self.strictBanning == "True":
-			print("one")
 			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=? OR IP=?",[user.eID, user.addr[0]])
 		else:
 			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=?",[user.eID])
@@ -202,7 +202,7 @@ class Echo():
 				if commandFlag in roleList[role]:
 					return True
 		except KeyError:
-			print("[Internal Error] eID " + user.eID + " has an invalid role")
+			logger.error("eID " + user.eID + " has an invalid role")
 
 		return False
 

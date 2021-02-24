@@ -8,3 +8,4 @@ class User():
 		self.channel = None
 		self.timesRequestedHistory = 0
 		self.connectionValid = True
+		self.isMuted = False
