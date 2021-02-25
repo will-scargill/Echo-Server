@@ -222,3 +222,9 @@ class Echo():
 		self.cursor.execute("SELECT * FROM chatHistory WHERE channel=? ORDER BY realtime ASC", [channel])
 		channelHistory = self.cursor.fetchall()
 		return channelHistory
+
+	def GetUserFromName(self, username): # Returns the user object
+		for user in self.users.values():
+			if user.username == username:
+				return user
+		return None

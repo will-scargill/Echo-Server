@@ -3,6 +3,9 @@ import sys
 import datetime
 from logzero import logger
 
+from modules import dbLogger
+from modules import config
+
 from net.sendMessage import sendMessage
 
 importedCommands = {}
@@ -24,6 +27,16 @@ def parse(conn, addr, currentUser, server, data):
 			#exec("from modules.commands.{0} import handle as {1}Handle".format(splitCommand[0][1:],splitCommand[0][1:]))
 			#exec("{0}Handle(conn, addr, currentUser, server, splitCommand)".format(splitCommand[0][1:]))
 			importedCommands[splitCommand[0][1:]](conn, addr, currentUser, server, splitCommand)
+
+			if config.GetSetting("storeCommandlogs", "Logging") == "True":
+				try:
+					userObj = server.GetUserFromName(splitCommand[1])
+				except IndexError:
+					userObj = None
+				if splitCommand[0][1:] == "pm":
+					dbLogger.logCommand(server, currentUser, userObj, " ".join(splitCommand[:2]))
+				else:
+					dbLogger.logCommand(server, currentUser, userObj, data["data"])
 		else:
 			currentDT = datetime.datetime.now()
 			dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))

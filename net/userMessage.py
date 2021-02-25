@@ -3,7 +3,8 @@ import datetime
 
 from net.sendMessage import sendMessage
 from modules.colorhash import ColorHash
-from modules import logger
+from modules import config
+from modules import dbLogger
 from modules import commandParser
 
 def handle(conn, addr, currentUser, server, data):
@@ -28,4 +29,7 @@ def handle(conn, addr, currentUser, server, data):
 		for eID in channelUsers:
 			sendMessage(server.users[eID].conn, server.users[eID].secret, "outboundMessage", data["data"], metadata=metadata)
 
-		logger.logChatHistory(server, currentUser, data["data"], colour.hex)
+		dbLogger.logChatHistory(server, currentUser, data["data"], colour.hex)
+
+		if config.GetSetting("storeChatlogs", "Logging") == "True":
+			dbLogger.logMessage(server, currentUser, data["data"])

@@ -3,6 +3,8 @@ import datetime
 
 from net.sendMessage import sendMessage
 from modules.colorhash import ColorHash
+from modules import dbLogger
+from modules import config
 
 def handle(conn, addr, currentUser, server, command):
 	try:
@@ -16,6 +18,9 @@ def handle(conn, addr, currentUser, server, command):
 
 				sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", " ".join(pmData), metadata=metadata)
 				sendMessage(v.conn, v.secret, "outboundMessage", " ".join(pmData), metadata=metadata)
+
+				if config.GetSetting("storePmlogs", "Logging") == "True":
+					dbLogger.logPM(server, currentUser, v, " ".join(pmData))	
 				break
 	except IndexError:
 		pass
