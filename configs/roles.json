@@ -1,5 +1,5 @@
 {
 "moderator": ["97", "k", "m", "u"],
-"operator": ["98", "w", "k", "m", "u"],
-"admin": ["99", "a"]
+"operator": ["98", "w", "k", "m", "u", "M"],
+"admin": ["99", "*"]
 }

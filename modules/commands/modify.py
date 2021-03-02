@@ -14,34 +14,49 @@ def handle(conn, addr, currentUser, server, command):
 		else:
 			for k, v in server.users.items():
 				if target == v.username:
-					server.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[v.eID])
-					try:
-						userRoles = (list(server.cursor.fetchall()))[0][0]
-						userRoles = ast.literal_eval(userRoles)
-					except IndexError:
-						return False
+					if server.IsValidCommandTarget(currentUser, v):
+						roleList = {}
+						with open(r"configs/roles.json", "r") as roleFile:
+							roleList = json.load(roleFile)
 
-					operation = command[2]
-					newRoles = command[3:]
-					if operation == "add":
-						for role in newRoles:
-							userRoles.append(role.lower())
-					elif operation == "remove":
-						for role in newRoles:
-							try:
-								userRoles.remove(role.lower())
-							except ValueError:
-								pass
+						server.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[v.eID])
+						try:
+							userRoles = (list(server.cursor.fetchall()))[0][0]
+							userRoles = ast.literal_eval(userRoles)
+						except IndexError:
+							server.cursor.execute("INSERT INTO userRoles (eID) values (?)",[v.eID])
+							userRoles = []
 
-					server.cursor.execute("UPDATE userRoles SET roles=? WHERE eID=?",[json.dumps(userRoles), v.eID])
-					server.dbconn.commit()
+						operation = command[2]
+						newRoles = command[3:]
+						userHeir = server.GetUserHeir(currentUser)
 
-					currentDT = datetime.datetime.now()
-					dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-					metadata = ["Server", "#0000FF", dt]
+						if operation == "add":
+							for role in newRoles:
+								try:
+									if roleList[role][0] >= userHeir:
+										server.ServerMessage(currentUser, "You cannot add the role - " + role)										
+									elif role in userRoles:
+										server.ServerMessage(currentUser, "User already has the role - " + role)
+									else:
+										userRoles.append(role.lower())
+								except KeyError:
+									server.ServerMessage(currentUser, "Role '" + role + "' does not exist")
+						elif operation == "remove":
+							for role in newRoles:
+								try:
+									userRoles.remove(role.lower())
+								except ValueError:
+									pass
 
-					sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + "'s roles were modified", metadata=metadata)	
-					sendMessage(v.conn, v.secret, "outboundMessage", "Your roles were modified", metadata=metadata)
-					break			
+						server.cursor.execute("UPDATE userRoles SET roles=? WHERE eID=?",[json.dumps(userRoles), v.eID])
+						server.dbconn.commit()
+
+						server.ServerMessage(currentUser, "User " + v.username + "'s roles were modified")
+						server.ServerMessage(v, "Your roles were modified")
+						break									
+					else:	
+						server.ServerMessage(currentUser, "You cannot execute this command on that user")
+						break
 	except IndexError:
 		pass

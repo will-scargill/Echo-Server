@@ -42,3 +42,5 @@ def parse(conn, addr, currentUser, server, data):
 			dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 			metadata = ["Server", "#0000FF", dt]
 			sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You do not have permission to perform this command", metadata=metadata)
+	else:
+		pass

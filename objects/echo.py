@@ -5,6 +5,7 @@ import json
 import sqlite3
 from sqlite3 import OperationalError
 from logzero import logger
+import datetime
 import os
 import ast
 from Crypto.PublicKey import RSA
@@ -12,6 +13,8 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Cipher import AES
 
 from modules import commandParser
+from modules import config
+from net.sendMessage import sendMessage
 
 class Echo():
 	def __init__(self, name, ip, port, password, channels, motd, nums, compatibleClientVers, strictBanning):
@@ -23,6 +26,8 @@ class Echo():
 		self.users = {}
 		self.compatibleClientVers = compatibleClientVers
 		self.strictBanning = strictBanning
+
+		self.blacklist = []
 
 		self.channels = {}
 		for c in channels:
@@ -38,9 +43,16 @@ class Echo():
 		self.packagedData = json.dumps([json.dumps(channels), motd])
 
 		self.dbconn = None
-		self.cursor = None
+		self.cursor = None	
 
 	def StartServer(self, clientConnectionThread):
+		try:
+			with open(r"configs/blacklist.txt") as f:
+				bl = f.readlines()
+				self.blacklist = [x.strip() for x in bl]
+		except FileNotFoundError:
+			logger.warning("Blacklist file not found, proceeding with empty blacklist")
+
 		try: # Try to read data from RSA keys to check if they exist
 		    fileIn = open(r"data/public.pem", "rb")
 		    fileIn.close()
@@ -101,7 +113,7 @@ class Echo():
 		    },
 		    {
 		        "name": "commandLogs",
-		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT, reason TEXT"
+		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT"
 		    },
 		    {
 		        "name": "pmLogs",
@@ -197,12 +209,12 @@ class Echo():
 
 		try:
 			for role in userRoles:
-				if "a" in roleList[role]:
+				if "*" in roleList[role]:
 					return True
 				if commandFlag in roleList[role]:
 					return True
 		except KeyError:
-			logger.error("eID " + user.eID + " has an invalid role")
+			logger.error("eID " + user.eID + " has an invalid role - " + role)
 
 		return False
 
@@ -228,3 +240,82 @@ class Echo():
 			if user.username == username:
 				return user
 		return None
+
+	def IsValidCommandTarget(self, user, target):
+		roleList = {}
+		with open(r"configs/roles.json", "r") as roleFile:
+			roleList = json.load(roleFile)
+
+		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[user.eID])
+		try:
+			userRoles = (list(self.cursor.fetchall()))[0][0]
+			userRoles = ast.literal_eval(userRoles)
+		except IndexError:
+			return False
+
+		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[target.eID])
+		try:
+			targetRoles = (list(self.cursor.fetchall()))[0][0]
+			targetRoles = ast.literal_eval(targetRoles)
+		except IndexError:
+			return True
+
+		userRoleRankings = []
+		for role in userRoles:
+			try:
+				userRoleRankings.append(roleList[role][0])
+			except KeyError:
+				logger.error("eID " + user.eID + " has an invalid role - " + role)
+		targetRoleRankings = []
+		for role in targetRoles:
+			try:
+				targetRoleRankings.append(roleList[role][0])
+			except KeyError:
+				logger.error("eID " + target.eID + " has an invalid role - " + role)
+
+		try:
+			if max(targetRoleRankings) >= max(userRoleRankings):
+				return False
+			else:
+				return True
+		except ValueError: # target has no roles
+			return True
+
+	def GetUserHeir(self, user):
+		roleList = {}
+		with open(r"configs/roles.json", "r") as roleFile:
+			roleList = json.load(roleFile)
+
+		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[user.eID])
+		try:
+			userRoles = (list(self.cursor.fetchall()))[0][0]
+			userRoles = ast.literal_eval(userRoles)
+		except IndexError:
+			return False
+
+		userRoleRankings = []
+		for role in userRoles:
+			try:
+				userRoleRankings.append(roleList[role][0])
+			except KeyError:
+				logger.error("eID " + user.eID + " has an invalid role - " + role)
+		try:
+			return max(userRoleRankings)
+		except ValueError: # target has no roles
+			return 0
+
+	def ServerMessage(self, user, content):
+		currentDT = datetime.datetime.now()
+		dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
+		metadata = ["Server", "#0000FF", dt]
+
+		sendMessage(user.conn, user.secret, "outboundMessage", content, metadata=metadata)
+
+	def CheckBlacklist(self, message):
+		if config.GetSetting("useBlacklist", "Blacklist") == "False":
+			return True
+		messageSplit = message.split()
+		for word in messageSplit:
+			if word.lower() in self.blacklist:
+				return False
+		return True
