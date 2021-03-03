@@ -7,5 +7,6 @@
 "modify": "M",
 "pm": "*",
 "self": "*",
-"getroles": "g"
+"getroles": "g",
+"letmein": "*"
 }

@@ -10,7 +10,7 @@ def handle(conn, addr, currentUser, server, command):
 	try:
 		target = command[1]
 		if target == currentUser.username:
-			pass
+			return False
 		else:
 			for k, v in server.users.items():
 				if target == v.username:
@@ -25,6 +25,7 @@ def handle(conn, addr, currentUser, server, command):
 							userRoles = ast.literal_eval(userRoles)
 						except IndexError:
 							server.cursor.execute("INSERT INTO userRoles (eID) values (?)",[v.eID])
+							server.dbconn.commit()
 							userRoles = []
 
 						operation = command[2]
@@ -54,9 +55,10 @@ def handle(conn, addr, currentUser, server, command):
 
 						server.ServerMessage(currentUser, "User " + v.username + "'s roles were modified")
 						server.ServerMessage(v, "Your roles were modified")
-						break									
+						return True							
 					else:	
 						server.ServerMessage(currentUser, "You cannot execute this command on that user")
-						break
+						return False
+			return False
 	except IndexError:
-		pass
+		return False

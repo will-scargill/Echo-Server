@@ -34,6 +34,7 @@ def handle(conn, addr, currentUser, server, command):
 				metadata = ["Server", "#0000FF", dt]
 
 				sendMessage(currentUser.conn, currentUser.secret, "commandData", json.dumps(userData), subtype="multiLine", metadata=metadata)
-				break
+				return True
+		return False
 	except IndexError:
-		pass
+		return False

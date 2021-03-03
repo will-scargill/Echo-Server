@@ -113,7 +113,7 @@ class Echo():
 		    },
 		    {
 		        "name": "commandLogs",
-		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT"
+		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT, successful TEXT"
 		    },
 		    {
 		        "name": "pmLogs",

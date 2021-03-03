@@ -9,7 +9,7 @@ def handle(conn, addr, currentUser, server, command):
 	try:
 		target = command[1]
 		if target == currentUser.username:
-			pass
+			return False
 		else:
 			unmuteReason = " ".join(command[2:])
 			for k, v in server.users.items():
@@ -25,11 +25,13 @@ def handle(conn, addr, currentUser, server, command):
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was muted", metadata=metadata)	
 
 						logger.info("Client " + str(v.addr) + " was muted")
+						return True
 					else:
 						currentDT = datetime.datetime.now()
 						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 						metadata = ["Server", "#0000FF", dt]		
-						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)						
-					break			
+						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)		
+						return False	
+			return False			
 	except IndexError:
-		pass
+		return False

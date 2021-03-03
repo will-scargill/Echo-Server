@@ -7,6 +7,8 @@ import os, sys
 import datetime
 from logzero import logger
 import logzero
+import random
+import string
 
 from objects import echo, user
 from modules import encoding
@@ -19,6 +21,17 @@ from net import userMessage
 from net import disconnect
 from net import historyRequest
 from net import leaveChannel
+
+if not os.path.exists(r"data/key.txt"):
+    key = ''.join(random.choices(string.ascii_letters + string.digits, k=32))
+    with open(r"data/key.txt", "w") as f:
+        f.write(key)
+    logger.warning("No starterkey file detected")
+    print("-----------------------------")
+    logger.info("Welcome to Echo!")
+    logger.info("Use the command /letmein [key] to be given the administrator role")
+    logger.info("The key can be found in the data folder in your install directory")
+    print("-----------------------------")
 
 def ClientConnectionThread(conn, addr):
     try:

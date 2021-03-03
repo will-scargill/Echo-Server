@@ -21,6 +21,7 @@ def handle(conn, addr, currentUser, server, command):
 
 				if config.GetSetting("storePmlogs", "Logging") == "True":
 					dbLogger.logPM(server, currentUser, v, " ".join(pmData))	
-				break
+				return True
+		return False
 	except IndexError:
-		pass
+		return False

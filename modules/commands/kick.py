@@ -9,7 +9,7 @@ def handle(conn, addr, currentUser, server, command):
 	try:
 		target = command[1]
 		if target == currentUser.username:
-			pass
+			return False
 		else:
 			kickReason = " ".join(command[2:])
 			for k, v in server.users.items():
@@ -36,11 +36,13 @@ def handle(conn, addr, currentUser, server, command):
 						metadata = ["Server", "#0000FF", dt]
 
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was kicked", metadata=metadata)	
+						return True
 					else:
 						currentDT = datetime.datetime.now()
 						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 						metadata = ["Server", "#0000FF", dt]		
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)
-					break			
+						return False
+			return False
 	except IndexError:
-		pass
+		return False

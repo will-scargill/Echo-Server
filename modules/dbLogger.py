@@ -25,12 +25,12 @@ def logMessage(server, user, message):
 		message])
 	server.dbconn.commit()
 
-def logCommand(server, user, target, command):
+def logCommand(server, user, target, command, success):
 	currentDT = datetime.datetime.now()
 	dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 	
 	if target == None:
-		server.cursor.execute("INSERT INTO commandLogs (eIDSender, senderIP, senderUsername, eIDTarget, targetIP, targetUsername, channel, date, command) VALUES (?,?,?,?,?,?,?,?,?)",[user.eID,		
+		server.cursor.execute("INSERT INTO commandLogs (eIDSender, senderIP, senderUsername, eIDTarget, targetIP, targetUsername, channel, date, command, successful) VALUES (?,?,?,?,?,?,?,?,?,?)",[user.eID,		
 			str(user.addr),
 			user.username,
 			"N/A",
@@ -38,10 +38,11 @@ def logCommand(server, user, target, command):
 			"N/A",
 			user.channel,
 			dt,
-			command])
+			command,
+			str(success)])
 		server.dbconn.commit()
 	else:
-		server.cursor.execute("INSERT INTO commandLogs (eIDSender, senderIP, senderUsername, eIDTarget, targetIP, targetUsername, channel, date, command) VALUES (?,?,?,?,?,?,?,?,?)",[user.eID,		
+		server.cursor.execute("INSERT INTO commandLogs (eIDSender, senderIP, senderUsername, eIDTarget, targetIP, targetUsername, channel, date, command, successful) VALUES (?,?,?,?,?,?,?,?,?,?)",[user.eID,		
 			str(user.addr),
 			user.username,
 			target.eID,
@@ -49,7 +50,8 @@ def logCommand(server, user, target, command):
 			target.username,
 			user.channel,
 			dt,
-			command])
+			command,
+			str(success)])
 		server.dbconn.commit()
 
 def logPM(server, user, target, message):

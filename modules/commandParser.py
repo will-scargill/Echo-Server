@@ -26,17 +26,21 @@ def parse(conn, addr, currentUser, server, data):
 			logger.info("Client " + str(currentUser.addr) + " ran command " + splitCommand[0][1:])
 			#exec("from modules.commands.{0} import handle as {1}Handle".format(splitCommand[0][1:],splitCommand[0][1:]))
 			#exec("{0}Handle(conn, addr, currentUser, server, splitCommand)".format(splitCommand[0][1:]))
-			importedCommands[splitCommand[0][1:]](conn, addr, currentUser, server, splitCommand)
-
+			result = importedCommands[splitCommand[0][1:]](conn, addr, currentUser, server, splitCommand)
+			if result == None:
+				result = True
 			if config.GetSetting("storeCommandlogs", "Logging") == "True":
-				try:
-					userObj = server.GetUserFromName(splitCommand[1])
-				except IndexError:
-					userObj = None
-				if splitCommand[0][1:] == "pm":
-					dbLogger.logCommand(server, currentUser, userObj, " ".join(splitCommand[:2]))
+				if config.GetSetting("logFailedCommands", "Logging") == "False" and result == False:
+					pass
 				else:
-					dbLogger.logCommand(server, currentUser, userObj, data["data"])
+					try:
+						userObj = server.GetUserFromName(splitCommand[1])
+					except IndexError:
+						userObj = None
+					if splitCommand[0][1:] == "pm":
+						dbLogger.logCommand(server, currentUser, userObj, " ".join(splitCommand[:2]), result)
+					else:
+						dbLogger.logCommand(server, currentUser, userObj, data["data"], result)
 		else:
 			currentDT = datetime.datetime.now()
 			dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))

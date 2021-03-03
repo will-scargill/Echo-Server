@@ -9,7 +9,7 @@ def handle(conn, addr, currentUser, server, command):
 	try:
 		target = command[1]
 		if target == currentUser.username:
-			pass
+			return False
 		else:
 			banReason = " ".join(command[2:])
 			for k, v in server.users.items():
@@ -40,14 +40,17 @@ def handle(conn, addr, currentUser, server, command):
 
 							server.cursor.execute("INSERT INTO bannedUsers (eID, IP, dateBanned, reason) values (?,?,?,?)",[v.eID, v.addr[0], dt, banReason])
 							server.dbconn.commit()
+							return True
 						else:
 							currentDT = datetime.datetime.now()
 							dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 							metadata = ["Server", "#0000FF", dt]		
 							sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)
+							return False
 					else:
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " is already banned", metadata=metadata)	
-					break			
+						return False
+			return False
 	except IndexError:
-		pass
+		return False
 
