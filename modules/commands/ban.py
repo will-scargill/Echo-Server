@@ -12,6 +12,8 @@ def handle(conn, addr, currentUser, server, command):
 			return False
 		else:
 			banReason = " ".join(command[2:])
+			if banReason == "":
+				banReason = "No reason given"
 			for k, v in server.users.items():
 				if target == v.username:
 					if server.IsNotBanned(v):

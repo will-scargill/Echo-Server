@@ -108,6 +108,10 @@ def ClientConnectionThread(conn, addr):
                         historyRequest.handle(conn, addr, currentUser, server, data)
                     elif data["messagetype"] == "leaveChannel":
                         leaveChannel.handle(conn, addr, currentUser, server, data)
+        except json.decoder.JSONDecodeError:
+            logger.error("Received illegal disconnect from client " + str(addr))
+            disconnect.handle(conn, addr, currentUser, server, data)
+            currentUser.connectionValid = False
         except ConnectionResetError:
             logger.error("Received illegal disconnect from client " + str(addr))
             disconnect.handle(conn, addr, currentUser, server, data)

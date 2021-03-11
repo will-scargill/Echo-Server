@@ -2,7 +2,7 @@ import json
 import datetime
 
 from net.sendMessage import sendMessage
-from modules.colorhash import ColorHash
+from colorhash import ColorHash
 from modules import config
 from modules import dbLogger
 from modules import commandParser

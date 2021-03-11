@@ -21,8 +21,8 @@ def handle(conn, addr, currentUser, server, command):
 						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
 						metadata = ["Server", "#0000FF", dt]
 
-						sendMessage(v.conn, v.secret, "outboundMessage", "You have been muted", metadata=metadata)	
-						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was muted", metadata=metadata)	
+						sendMessage(v.conn, v.secret, "outboundMessage", "You have been unmuted", metadata=metadata)	
+						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was unmuted", metadata=metadata)	
 
 						logger.info("Client " + str(v.addr) + " was muted")
 						return True

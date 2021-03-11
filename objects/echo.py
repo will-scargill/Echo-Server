@@ -151,12 +151,11 @@ class Echo():
 			return True
 
 	def ValidUsername(self, newUser):
+		newUser.username = newUser.username.strip()
 		for eID in self.users:
 			if self.users[eID].username == newUser.username:
 				return newUser.username + "_"
-			else:
-				return newUser.username
-		if newUser.username == "System":
+		if newUser.username == "System" or newUser.username == "":
 			newUser.username = "Clown"
 		return newUser.username
 

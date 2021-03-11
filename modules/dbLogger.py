@@ -1,7 +1,7 @@
 import sqlite3
 import datetime, time
 
-from modules.colorhash import ColorHash
+from colorhash import ColorHash
 
 def logChatHistory(server, user, message, colour):
 	currentDT = datetime.datetime.now()

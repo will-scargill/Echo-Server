@@ -1,0 +1,4 @@
+colorama==0.4.4
+colorhash==1.0.3
+logzero==1.6.3
+pycryptodome==3.10.1
