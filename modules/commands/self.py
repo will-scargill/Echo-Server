@@ -4,6 +4,8 @@ import ast
 
 from net.sendMessage import sendMessage
 
+from objects.models.userRoles import userRoles
+
 def handle(conn, addr, currentUser, server, command):
 	try:
 		userData = []
@@ -15,15 +17,14 @@ def handle(conn, addr, currentUser, server, command):
 			userData.append("No channel")
 		else:
 			userData.append("Channel: " + currentUser.channel)
-
-		server.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[currentUser.eID])
-		try:
-			userRoles = (list(server.cursor.fetchall()))[0][0]
-			userRoles = ast.literal_eval(userRoles)
-		except IndexError:
+			
+		query = userRoles.select().where(userRoles.c.eID == currentUser.eID) 
+		roleData = (server.dbconn.execute(query)).fetchone()
+		roleData = ast.literal_eval(roleData[1])
+		if roleData == None:
 			return False
 
-		for role in userRoles:
+		for role in roleData:
 			userData.append("Role: " + role)
 
 		currentDT = datetime.datetime.now()

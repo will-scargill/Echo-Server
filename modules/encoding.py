@@ -24,3 +24,8 @@ def DecodeEncrypted(encryptedData, key):
 	jsonData = aes.Decrypt(listEncrypted[0], key, listEncrypted[1])
 	dictData = json.loads(jsonData)
 	return dictData
+
+def reformatData(data):
+	for i in range(len(data)):
+		data[i] = list(data[i])
+	return data

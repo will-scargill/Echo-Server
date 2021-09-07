@@ -3,7 +3,8 @@ import datetime
 from logzero import logger
 
 from net.sendMessage import sendMessage
-from net import disconnect
+
+from objects.models.bannedUsers import bannedUsers
 
 def handle(conn, addr, currentUser, server, command):
 	try:
@@ -40,8 +41,15 @@ def handle(conn, addr, currentUser, server, command):
 
 							sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was banned", metadata=metadata)	
 
-							server.cursor.execute("INSERT INTO bannedUsers (eID, IP, dateBanned, reason) values (?,?,?,?)",[v.eID, v.addr[0], dt, banReason])
-							server.dbconn.commit()
+							query = bannedUsers.insert().values(
+								eID = v.eID,
+								IP = v.addr[0],
+								dateBanned = dt,
+								reason = banReason
+							)
+							
+							server.dbconn.execute(query)
+
 							return True
 						else:
 							currentDT = datetime.datetime.now()
@@ -50,6 +58,9 @@ def handle(conn, addr, currentUser, server, command):
 							sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)
 							return False
 					else:
+						currentDT = datetime.datetime.now()
+						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
+						metadata = ["Server", "#0000FF", dt]	
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " is already banned", metadata=metadata)	
 						return False
 			return False

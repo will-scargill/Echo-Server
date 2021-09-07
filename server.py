@@ -6,7 +6,6 @@ import sqlite3
 import os, sys
 import datetime
 from logzero import logger
-import logzero
 import random
 import string
 
@@ -86,12 +85,13 @@ def ClientConnectionThread(conn, addr):
         
     except ConnectionResetError:
         logger.error("Client " + str(addr) + " disconnected during handshake")
+        currentUser.connectionValid = False
     
     if currentUser.connectionValid == True:
         try:
             sendMessage(conn, userSecret, "CRAccepted", "")
             server.AddUser(currentUser)
-            sendMessage(conn, userSecret, "serverData", server.packagedData)
+            #sendMessage(conn, userSecret, "serverData", server.packagedData)
             logger.info("Client " + str(addr) + " completed handshake")
             while currentUser.connectionValid:
                     byteData = conn.recv(1024)
@@ -100,6 +100,8 @@ def ClientConnectionThread(conn, addr):
                     if data["messagetype"] == "disconnect":
                         disconnect.handle(conn, addr, currentUser, server, data) 
                         break
+                    elif data["messagetype"] == "requestInfo":
+                        sendMessage(conn, userSecret, "serverData", server.packagedData)
                     elif data["messagetype"] == "userMessage":
                         userMessage.handle(conn, addr, currentUser, server, data) 
                     elif data["messagetype"] == "changeChannel":
@@ -139,6 +141,12 @@ strictBanning = config.GetSetting("strictBanning", "Server")
 logger.info("Config loaded")
 
 server = echo.Echo(name, "127.0.0.1", port, password, channels, motd, clientnums, compatibleClientVers, strictBanning)
-server.initDB()
+#server.initDB()
+server.initAlchemy()
 server.StartServer(ClientConnectionThread)
 
+while True:
+    userInp = input("")
+    if userInp == "q":
+        server.StopServer()
+        sys.exit()

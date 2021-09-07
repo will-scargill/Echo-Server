@@ -4,7 +4,8 @@ import ast
 from logzero import logger
 
 from net.sendMessage import sendMessage
-from net import disconnect
+
+from objects.models.userRoles import userRoles as userRolesObj
 
 def handle(conn, addr, currentUser, server, command):
 	try:
@@ -19,13 +20,16 @@ def handle(conn, addr, currentUser, server, command):
 						with open(r"configs/roles.json", "r") as roleFile:
 							roleList = json.load(roleFile)
 
-						server.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[v.eID])
+						query = userRolesObj.select().where(userRolesObj.c.eID == v.eID) 
+						
 						try:
-							userRoles = (list(server.cursor.fetchall()))[0][0]
-							userRoles = ast.literal_eval(userRoles)
+							userRoles = (server.dbconn.execute(query)).fetchone()
+							userRoles = ast.literal_eval(userRoles[1])
 						except IndexError:
-							server.cursor.execute("INSERT INTO userRoles (eID) values (?)",[v.eID])
-							server.dbconn.commit()
+							query = userRolesObj.insert().values(
+								eId = v.eId
+							)
+							server.dbconn.execute(query)
 							userRoles = []
 
 						operation = command[2]
@@ -36,9 +40,11 @@ def handle(conn, addr, currentUser, server, command):
 							for role in newRoles:
 								try:
 									if roleList[role][0] >= userHeir:
-										server.ServerMessage(currentUser, "You cannot add the role - " + role)										
+										server.ServerMessage(currentUser, "You cannot add the role - " + role)		
+										return False								
 									elif role in userRoles:
 										server.ServerMessage(currentUser, "User already has the role - " + role)
+										return False
 									else:
 										userRoles.append(role.lower())
 								except KeyError:
@@ -50,8 +56,8 @@ def handle(conn, addr, currentUser, server, command):
 								except ValueError:
 									pass
 
-						server.cursor.execute("UPDATE userRoles SET roles=? WHERE eID=?",[json.dumps(userRoles), v.eID])
-						server.dbconn.commit()
+						query = userRolesObj.update().where(userRolesObj.c.eID == v.eID).values(roles = json.dumps(userRoles))
+						server.dbconn.execute(query)
 
 						server.ServerMessage(currentUser, "User " + v.username + "'s roles were modified")
 						server.ServerMessage(v, "Your roles were modified")

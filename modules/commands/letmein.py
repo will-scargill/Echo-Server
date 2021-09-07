@@ -5,6 +5,8 @@ from logzero import logger
 
 from net.sendMessage import sendMessage
 
+from objects.models.userRoles import userRoles
+
 def handle(conn, addr, currentUser, server, command):
 	with open(r"data/key.txt", "r+") as f:
 		key = f.read()
@@ -13,8 +15,11 @@ def handle(conn, addr, currentUser, server, command):
 			logger.warning("The key has already been used. Please delete the key file if it is needed again")
 			return False
 		elif key == command[1]:
-			server.cursor.execute("INSERT INTO userRoles (eID, roles) values (?,?)",[currentUser.eID, '["admin"]'])
-			server.dbconn.commit()
+			query = userRoles.insert().values(
+				eID = currentUser.eID,
+				roles = '["admin"]'
+			)
+			server.dbconn.execute(query)
 			f.seek(0)
 			f.write("LOCKED")
 			f.truncate()

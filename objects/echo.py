@@ -1,9 +1,13 @@
 
+from logging import setLogRecordFactory
 import socket
 import threading
 import json
 import sqlite3
 from sqlite3 import OperationalError
+from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select, text
+from sqlalchemy import and_, or_
+
 from logzero import logger
 import datetime
 import os
@@ -14,7 +18,15 @@ from Crypto.Cipher import AES
 
 from modules import commandParser
 from modules import config
+from modules import encoding
 from net.sendMessage import sendMessage
+
+from objects.models.bannedUsers import bannedUsers
+from objects.models.chatHistory import chatHistory
+from objects.models.chatLogs import chatLogs
+from objects.models.commandLogs import commandLogs
+from objects.models.pmLogs import pmLogs
+from objects.models.userRoles import userRoles
 
 class Echo():
 	def __init__(self, name, ip, port, password, channels, motd, nums, compatibleClientVers, strictBanning):
@@ -42,8 +54,10 @@ class Echo():
 
 		self.packagedData = json.dumps([json.dumps(channels), motd])
 
-		self.dbconn = None
-		self.cursor = None	
+		self.listenerDaemon = None
+
+		self.dbconn = None	
+		self.engine = None
 
 	def StartServer(self, clientConnectionThread):
 		try:
@@ -84,55 +98,43 @@ class Echo():
 
 		logger.info("Listening on " + str(self.ip) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
 
-		self.serverSocket.listen(5)
-		while self.recvControl == True:
-			conn, addr = self.serverSocket.accept()
-			threading.Thread(target=clientConnectionThread, args=(conn,addr)).start() # Start a new thread for the client
+		self.listenerDaemon = threading.Thread(target=Listener, args=(self,clientConnectionThread))
+		self.listenerDaemon.daemon = True
+		self.listenerDaemon.start()
 
-	def initDB(self):
-		if os.path.exists("data"):
-			self.dbconn = sqlite3.connect(r"data/database.db", check_same_thread=False) # Connect to the database
-			self.cursor = self.dbconn.cursor() # Setup sqlite cursor
-		else:
+	def initAlchemy(self):
+		if not os.path.exists("data"):
 			os.mkdir("data")
-			self.dbconn = sqlite3.connect(r"data/database.db", check_same_thread=False) # Connect to the database
-			self.cursor = self.dbconn.cursor() # Setup sqlite cursor
 
-		tables = [
-		    {
-		        "name": "bannedUsers",
-		        "columns": "eID TEXT, IP TEXT, dateBanned TEXT, reason TEXT"
-		    },
-		    {
-		        "name": "userRoles",
-		        "columns": "eID TEXT, roles TEXT"
-		    },
-		    {
-		        "name": "chatLogs",
-		        "columns": "eID TEXT, IP TEXT, username TEXT, channel TEXT, date TEXT, message TEXT"
-		    },
-		    {
-		        "name": "commandLogs",
-		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, command TEXT, successful TEXT"
-		    },
-		    {
-		        "name": "pmLogs",
-		        "columns": "eIDSender TEXT, senderIP TEXT, senderUsername TEXT, eIDTarget TEXT, targetIP TEXT, targetUsername TEXT, channel TEXT, date TEXT, message TEXT"
-		    },
-		    {
-		        "name": "chatHistory",
-		        "columns": "username TEXT, channel TEXT, date TEXT, message TEXT, colour TEXT, realtime INTEGER"
-		    }
-		]
+		
 
-		for table in tables: # Create database tables if they don't exist
-		    self.cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", [table["name"]])
-		    data = self.cursor.fetchall()
-		    if len(data) <= 0:  # If table doesn't exist
-		        self.cursor.execute("CREATE TABLE " + table["name"] + " (" + table["columns"] + ")")
+		dbType = os.environ.get("ECHO_DB_TYPE")
+		if dbType is None or dbType == "sqlite":
+			self.engine = create_engine('sqlite:///data/database.db?check_same_thread=False')
+		elif dbType == "mysql":
+			dbUser = os.environ.get("ECHO_MYSQL_USER")
+			dbHost = os.environ.get("ECHO_MYSQL_HOST")
+			dbPass = os.environ.get("ECHO_MYSQL_PASS")
+			dbName = os.environ.get("ECHO_MYSQL_DB")
+			self.engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(dbUser, dbPass, dbHost, dbName))
+
+		meta = MetaData()
+		
+		bannedUsers.create(self.engine, checkfirst=True)
+		chatHistory.create(self.engine, checkfirst=True)
+		chatLogs.create(self.engine, checkfirst=True)
+		commandLogs.create(self.engine, checkfirst=True)
+		pmLogs.create(self.engine, checkfirst=True)
+		userRoles.create(self.engine, checkfirst=True)
+
+		#meta.create_all(self.engine)
+
+		self.dbconn = self.engine.connect()
 
 	def StopServer(self):
 		self.recvControl = False
+		for k, v in self.users.items():
+			sendMessage(v.conn, v.secret, "connectionTerminated", "Server is shutting down", subtype="shutdown")
 		logger.info("Server Stopped")
 
 	def AddUser(self, user):
@@ -161,11 +163,11 @@ class Echo():
 
 	def IsNotBanned(self, user):
 		if self.strictBanning == "True":
-			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=? OR IP=?",[user.eID, user.addr[0]])
+			query = bannedUsers.select().where(or_(bannedUsers.c.eID == user.eID, bannedUsers.c.eID.IP == user.addr[0])) 
 		else:
-			self.cursor.execute("SELECT reason FROM bannedUsers WHERE eID=?",[user.eID])
-		matchingUsers = self.cursor.fetchall()
-		if len(matchingUsers) > 0:
+			query = bannedUsers.select().where(bannedUsers.c.eID == user.eID) 
+		matchingUsers = (self.dbconn.execute(query)).fetchone()
+		if matchingUsers != None: 
 			return False
 		else:
 			return True
@@ -199,15 +201,14 @@ class Echo():
 		with open(r"configs/roles.json", "r") as roleFile:
 			roleList = json.load(roleFile)
 
-		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[user.eID])
-		try:
-			userRoles = (list(self.cursor.fetchall()))[0][0]
-			userRoles = ast.literal_eval(userRoles)
-		except IndexError:
+		query = userRoles.select().where(userRoles.c.eID == user.eID) 
+		roleData = (self.dbconn.execute(query)).fetchone()
+		roleData = ast.literal_eval(roleData[1])
+		if roleData == None:
 			return False
 
 		try:
-			for role in userRoles:
+			for role in roleData:
 				if "*" in roleList[role]:
 					return True
 				if commandFlag in roleList[role]:
@@ -225,14 +226,14 @@ class Echo():
 		return users
 
 	def GetBasicChannelHistory(self, channel, limit):
-		self.cursor.execute("SELECT * FROM (SELECT * FROM chatHistory WHERE channel=? ORDER BY realtime DESC LIMIT ?) ORDER BY realtime ASC", [channel, limit])
-		channelHistory = self.cursor.fetchall()
-		return channelHistory
+		query = text("SELECT * FROM (SELECT * FROM chatHistory WHERE channel=:a ORDER BY realtime DESC LIMIT :b) sub ORDER BY realtime ASC")
+		channelHistory = (self.dbconn.execute(query, a=channel, b=limit)).fetchall()
+		return encoding.reformatData(channelHistory)
 
 	def GetAllChannelHistory(self, channel):
-		self.cursor.execute("SELECT * FROM chatHistory WHERE channel=? ORDER BY realtime ASC", [channel])
-		channelHistory = self.cursor.fetchall()
-		return channelHistory
+		query = text("SELECT * FROM chatHistory WHERE channel=:a ORDER BY realtime ASC")
+		channelHistory = (self.dbconn.execute(query, a=channel)).fetchall()
+		return encoding.reformatData(channelHistory)
 
 	def GetUserFromName(self, username): # Returns the user object
 		for user in self.users.values():
@@ -245,22 +246,20 @@ class Echo():
 		with open(r"configs/roles.json", "r") as roleFile:
 			roleList = json.load(roleFile)
 
-		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[user.eID])
-		try:
-			userRoles = (list(self.cursor.fetchall()))[0][0]
-			userRoles = ast.literal_eval(userRoles)
-		except IndexError:
+		query = userRoles.select().where(userRoles.c.eID == user.eID) 
+		roleData = (self.dbconn.execute(query)).fetchone()
+		roleData = ast.literal_eval(roleData[1])
+		if roleData == None:
 			return False
 
-		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[target.eID])
-		try:
-			targetRoles = (list(self.cursor.fetchall()))[0][0]
-			targetRoles = ast.literal_eval(targetRoles)
-		except IndexError:
-			return True
+		query = userRoles.select().where(userRoles.c.eID == target.eID) 
+		targetRoles = (self.dbconn.execute(query)).fetchone()
+		targetRoles = ast.literal_eval(targetRoles[1])
+		if targetRoles == None:
+			return False
 
 		userRoleRankings = []
-		for role in userRoles:
+		for role in roleData:
 			try:
 				userRoleRankings.append(roleList[role][0])
 			except KeyError:
@@ -284,16 +283,15 @@ class Echo():
 		roleList = {}
 		with open(r"configs/roles.json", "r") as roleFile:
 			roleList = json.load(roleFile)
-
-		self.cursor.execute("SELECT roles FROM userRoles WHERE eID=?",[user.eID])
-		try:
-			userRoles = (list(self.cursor.fetchall()))[0][0]
-			userRoles = ast.literal_eval(userRoles)
-		except IndexError:
+		
+		query = userRoles.select().where(userRoles.c.eID == user.eID) 
+		roleData = (self.dbconn.execute(query)).fetchone()
+		roleData = ast.literal_eval(roleData[1])
+		if roleData == None:
 			return False
 
 		userRoleRankings = []
-		for role in userRoles:
+		for role in roleData:
 			try:
 				userRoleRankings.append(roleList[role][0])
 			except KeyError:
@@ -318,3 +316,9 @@ class Echo():
 			if word.lower() in self.blacklist:
 				return False
 		return True
+
+def Listener(server, clientConnectionThread):
+	server.serverSocket.listen(5)
+	while server.recvControl == True:
+		conn, addr = server.serverSocket.accept()
+		threading.Thread(target=clientConnectionThread, args=(conn,addr)).start() # Start a new thread for the client
