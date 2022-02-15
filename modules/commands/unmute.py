@@ -35,3 +35,6 @@ def handle(conn, addr, currentUser, server, command):
 			return False			
 	except IndexError:
 		return False
+
+def gethelp():
+    return "unmute : usage : /unmute [target]"

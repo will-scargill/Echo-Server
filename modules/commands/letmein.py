@@ -29,3 +29,5 @@ def handle(conn, addr, currentUser, server, command):
 			server.ServerMessage(currentUser, "Incorrect key")
 			return False
 
+def gethelp():
+    return "letmein : usage : /letmein [key]"

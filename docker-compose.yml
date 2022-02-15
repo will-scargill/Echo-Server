@@ -1,0 +1,25 @@
+version: '3.9'
+networks:
+  db_local:
+    external: true
+    name: db_local 
+services:
+  echo:
+    container_name: echo
+    image: echo:latest
+    environment:
+      ECHO_LIVE: true
+      ECHO_DB_TYPE: mysql
+      ECHO_MYSQL_HOST: mysql-server
+      ECHO_MYSQL_USER: echo
+      ECHO_MYSQL_PASS: 8JP6gpCdpmqVLj32
+      ECHO_MYSQL_DB: echo
+    ports:
+        - 16000:16000
+    networks:
+      - db_local
+    volumes:
+      - data:/configs
+      - data:/data
+volumes:
+    data:

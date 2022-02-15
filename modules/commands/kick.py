@@ -48,3 +48,6 @@ def handle(conn, addr, currentUser, server, command):
 			return False
 	except IndexError:
 		return False
+
+def gethelp():
+    return "kick : usage : /kick [user] [reason]"
