@@ -25,7 +25,7 @@ def handle(conn, addr, currentUser, server, command):
 						try:
 							userRoles = (server.dbconn.execute(query)).fetchone()
 							userRoles = ast.literal_eval(userRoles[1])
-						except IndexError:
+						except (IndexError, TypeError, AttributeError) as e:
 							query = userRolesObj.insert().values(
 								eId = v.eId
 							)
@@ -68,3 +68,6 @@ def handle(conn, addr, currentUser, server, command):
 			return False
 	except IndexError:
 		return False
+
+def gethelp():
+    return "modify : usage : tba"

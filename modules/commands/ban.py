@@ -67,3 +67,5 @@ def handle(conn, addr, currentUser, server, command):
 	except IndexError:
 		return False
 
+def gethelp():
+    return "ban : usage : /ban [user] [reason]"

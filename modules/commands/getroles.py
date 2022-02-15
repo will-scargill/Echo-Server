@@ -23,3 +23,6 @@ def handle(conn, addr, currentUser, server, command):
 		return True
 	except IndexError:
 		return False
+
+def gethelp():
+    return "getroles : usage : /getroles"
