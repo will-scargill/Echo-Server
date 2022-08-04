@@ -1,5 +1,5 @@
 import json
-import datetime
+import time
 import ast
 
 from net.sendMessage import sendMessage
@@ -27,9 +27,7 @@ def handle(conn, addr, currentUser, server, command):
                     for role in allUserRoles:
                         userData.append("Role: " + role)
 
-                currentDT = datetime.datetime.now()
-                dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-                metadata = ["Server", "#0000FF", dt]
+                metadata = ["Server", "#0000FF", time.time()]
 
                 sendMessage(currentUser.conn, currentUser.secret, "commandData", json.dumps(userData), subtype="multiLine", metadata=metadata)
                 return True

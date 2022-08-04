@@ -3,11 +3,13 @@ import threading
 import json
 import base64
 import sqlite3
+import select
 import os, sys
 import datetime
 from logzero import logger
 import random
 import string
+from colorhash import ColorHash
 
 from objects import echo, user
 from modules import encoding
@@ -20,6 +22,7 @@ from net import userMessage
 from net import disconnect
 from net import historyRequest
 from net import leaveChannel
+from net import requestInfo
 
 if not os.path.exists("data"):
 	os.mkdir("data")
@@ -93,26 +96,30 @@ def ClientConnectionThread(conn, addr):
 	if currentUser.connectionValid == True:
 		try:
 			sendMessage(conn, userSecret, "CRAccepted", "")
+			for u in server.users.items():
+				print("sending userlist update to " + u[1].username)
+				sendMessage(u[1].conn, u[1].secret, "userlistUpdate", json.dumps([currentUser.username, currentUser.eID, (ColorHash(currentUser.username)).hex, "connected"]))
 			server.AddUser(currentUser)
-			sendMessage(conn, userSecret, "serverData", server.packagedData)
 			logger.info("Client " + str(addr) + " completed handshake")
+
 			while currentUser.connectionValid:
-				byteData = conn.recv(1024)
-				data = encoding.DecodeEncrypted(byteData, currentUser.secret)
-				logger.info("Received messagetype " + data["messagetype"] + " from client " + str(addr))
-				if data["messagetype"] == "disconnect":
-					disconnect.handle(conn, addr, currentUser, server, data) 
-					break
-				elif data["messagetype"] == "requestInfo":
-					sendMessage(conn, userSecret, "serverData", server.packagedData)
-				elif data["messagetype"] == "userMessage":
-					userMessage.handle(conn, addr, currentUser, server, data) 
-				elif data["messagetype"] == "changeChannel":
-					changeChannel.handle(conn, addr, currentUser, server, data)
-				elif data["messagetype"] == "historyRequest":
-					historyRequest.handle(conn, addr, currentUser, server, data)
-				elif data["messagetype"] == "leaveChannel":
-					leaveChannel.handle(conn, addr, currentUser, server, data)
+				recv, _, _ = select.select([conn], [], [])
+				if recv:
+					byteData = conn.recv(1024)
+					data = encoding.DecodeEncrypted(byteData, currentUser.secret)
+					logger.info("Received messagetype " + data["messagetype"] + " from client " + str(addr))
+					if data["messagetype"] == "disconnect":
+						disconnect.handle(conn, addr, currentUser, server, data) 
+					elif data["messagetype"] == "requestInfo":
+						requestInfo.handle(conn, addr, currentUser, server, data)
+					elif data["messagetype"] == "userMessage":
+						userMessage.handle(conn, addr, currentUser, server, data) 
+					elif data["messagetype"] == "changeChannel":
+						changeChannel.handle(conn, addr, currentUser, server, data)
+					elif data["messagetype"] == "historyRequest":
+						historyRequest.handle(conn, addr, currentUser, server, data)
+					elif data["messagetype"] == "leaveChannel":
+						leaveChannel.handle(conn, addr, currentUser, server, data)
 		except json.decoder.JSONDecodeError:
 			logger.error("Received illegal disconnect from client " + str(addr))
 			disconnect.handle(conn, addr, currentUser, server, data)

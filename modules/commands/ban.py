@@ -1,5 +1,5 @@
 import json
-import datetime
+import time
 from logzero import logger
 
 from net.sendMessage import sendMessage
@@ -30,14 +30,12 @@ def handle(conn, addr, currentUser, server, command):
 								channelUsers = json.dumps(server.GetChannelUsers(v.channel))
 
 								for eID in server.channels[v.channel]:
-									sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
+									sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", json.dumps([channelUsers,v.channel,"ECHO_BANNED"]));
 								
 							v.connectionValid = False
 							v.conn.close()
 
-							currentDT = datetime.datetime.now()
-							dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-							metadata = ["Server", "#0000FF", dt]
+							metadata = ["Server", "#0000FF", time.time()]
 
 							sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was banned", metadata=metadata)	
 
@@ -52,15 +50,11 @@ def handle(conn, addr, currentUser, server, command):
 
 							return True
 						else:
-							currentDT = datetime.datetime.now()
-							dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-							metadata = ["Server", "#0000FF", dt]		
+							metadata = ["Server", "#0000FF", time.time()]		
 							sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)
 							return False
 					else:
-						currentDT = datetime.datetime.now()
-						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-						metadata = ["Server", "#0000FF", dt]	
+						metadata = ["Server", "#0000FF", time.time()]	
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " is already banned", metadata=metadata)	
 						return False
 			return False

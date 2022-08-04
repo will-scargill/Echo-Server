@@ -27,7 +27,7 @@ def handle(conn, addr, currentUser, server, command):
 							userRoles = ast.literal_eval(userRoles[1])
 						except (IndexError, TypeError, AttributeError) as e:
 							query = userRolesObj.insert().values(
-								eId = v.eId
+								eID = v.eID
 							)
 							server.dbconn.execute(query)
 							userRoles = []

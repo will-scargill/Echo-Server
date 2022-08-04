@@ -1,6 +1,8 @@
 import json
-import datetime
+import time
+import socket
 from logzero import logger
+from colorhash import ColorHash
 
 from net.sendMessage import sendMessage
 from net import disconnect
@@ -21,28 +23,14 @@ def handle(conn, addr, currentUser, server, command):
 
 						logger.info("Client " + str(v.addr) + " was kicked from the server")
 
-						del server.users[v.eID]
-						if v.channel != None:
-							server.channels[v.channel].remove(v.eID)
+						disconnect.handle(v.conn, v.addr, v, server, [])
 
-							channelUsers = json.dumps(server.GetChannelUsers(v.channel))
-
-							for eID in server.channels[v.channel]:
-								sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers);
-							
-						v.connectionValid = False
-						v.conn.close()
-
-						currentDT = datetime.datetime.now()
-						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-						metadata = ["Server", "#0000FF", dt]
+						metadata = ["Server", "#0000FF", time.time()]
 
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was kicked", metadata=metadata)	
 						return True
 					else:
-						currentDT = datetime.datetime.now()
-						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-						metadata = ["Server", "#0000FF", dt]		
+						metadata = ["Server", "#0000FF", time.time()]		
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)
 						return False
 			return False

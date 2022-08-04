@@ -1,5 +1,5 @@
 import json
-import datetime
+import time
 from logzero import logger
 
 from net.sendMessage import sendMessage
@@ -17,9 +17,7 @@ def handle(conn, addr, currentUser, server, command):
 					if server.IsValidCommandTarget(currentUser, v):
 						v.isMuted = False
 
-						currentDT = datetime.datetime.now()
-						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-						metadata = ["Server", "#0000FF", dt]
+						metadata = ["Server", "#0000FF", time.time()]
 
 						sendMessage(v.conn, v.secret, "outboundMessage", "You have been unmuted", metadata=metadata)	
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "User " + v.username + " was unmuted", metadata=metadata)	
@@ -27,9 +25,7 @@ def handle(conn, addr, currentUser, server, command):
 						logger.info("Client " + str(v.addr) + " was muted")
 						return True
 					else:
-						currentDT = datetime.datetime.now()
-						dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-						metadata = ["Server", "#0000FF", dt]		
+						metadata = ["Server", "#0000FF", time.time()]		
 						sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You cannot execute this command on that user", metadata=metadata)		
 						return False	
 			return False			

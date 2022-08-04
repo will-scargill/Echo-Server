@@ -1,6 +1,6 @@
 import json
 import sys
-import datetime
+import time
 from logzero import logger
 
 from modules import dbLogger
@@ -42,9 +42,7 @@ def parse(conn, addr, currentUser, server, data):
 					else:
 						dbLogger.logCommand(server, currentUser, userObj, data["data"], result)
 		else:
-			currentDT = datetime.datetime.now()
-			dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-			metadata = ["Server", "#0000FF", dt]
+			metadata = ["Server", "#0000FF", time.time()]
 			sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You do not have permission to perform this command", metadata=metadata)
 	else:
 		pass

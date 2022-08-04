@@ -51,7 +51,7 @@ class Echo():
             self.RSAPrivate = None
             self.RSAPublicToSend = None
 
-            self.packagedData = json.dumps([json.dumps(channels), motd])
+            self.packagedData = [json.dumps(channels), motd]
 
             self.listenerDaemon = None
 
@@ -94,7 +94,6 @@ class Echo():
 
             self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.serverSocket.bind((self.ip, int(self.port)))
-
             logger.info("Listening on " + str(self.ip) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
 
             self.listenerDaemon = threading.Thread(target=Listener, args=(self,clientConnectionThread))

@@ -6,32 +6,27 @@ from net.sendMessage import sendMessage
 def handle(conn, addr, currentUser, server, data):
 	if data["data"] in server.channels:
 		currentUser.timesRequestedHistory = 1
-		
+	
+		oldChannel = None
 		if currentUser.channel == None:
 			firstJoin = True
 		else:
 			firstJoin = False
 			oldChannel = currentUser.channel
-
+		
 		currentUser.channel = data["data"]
 		server.channels[data["data"]].append(currentUser.eID)
 
-		# Update users in old channel (if exists)
+		# Update old channel data
 		if firstJoin == False:
 			server.channels[oldChannel].remove(currentUser.eID)
 
-			channelUsers = json.dumps(server.GetChannelUsers(oldChannel))
-
-			for eID in server.channels[oldChannel]:
-				sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers)
-
-
 		# Update users in the new channel
 
-		channelUsers = json.dumps(server.GetChannelUsers(data["data"]))
-
-		for eID in server.channels[data["data"]]:
-			sendMessage(server.users[eID].conn, server.users[eID].secret, "channelUpdate", channelUsers)
+		channelUpdate = [currentUser.username, oldChannel, data["data"]]
+		
+		for user in server.users.items():
+			sendMessage(user[1].conn, user[1].secret, "channelUpdate", json.dumps(channelUpdate))
 
 		# Send message history
 

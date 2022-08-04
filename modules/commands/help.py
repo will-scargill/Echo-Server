@@ -1,5 +1,5 @@
 import json
-import datetime
+import time
 import ast
 
 from net.sendMessage import sendMessage
@@ -19,9 +19,7 @@ def handle(conn, addr, currentUser, server, command):
 		    exec("import modules.commands.{0}".format(command))
 		    exec("helpData.append( modules.commands.{0}.gethelp() )".format(command))
 
-		currentDT = datetime.datetime.now()
-		dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-		metadata = ["Server", "#0000FF", dt]
+		metadata = ["Server", "#0000FF", time.time()]
 
 		sendMessage(currentUser.conn, currentUser.secret, "commandData", json.dumps(helpData), subtype="multiLine", metadata=metadata)
 		return True

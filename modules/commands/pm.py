@@ -1,6 +1,5 @@
 import json
-import datetime
-
+import time
 from net.sendMessage import sendMessage
 from colorhash import ColorHash
 from modules import dbLogger
@@ -12,15 +11,14 @@ def handle(conn, addr, currentUser, server, command):
 		pmData = command[2:]
 		for k, v in server.users.items():
 			if target == v.username:
-				currentDT = datetime.datetime.now()
-				dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-				metadata = ["[PM] " + currentUser.username, ColorHash(currentUser.username).hex, dt]
+				metadata = ["[PM] " + currentUser.username, ColorHash(currentUser.username).hex, time.time()]
 
 				sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", " ".join(pmData), metadata=metadata)
 				sendMessage(v.conn, v.secret, "outboundMessage", " ".join(pmData), metadata=metadata)
 
 				if config.GetSetting("storePmlogs", "Logging") == "True":
 					dbLogger.logPM(server, currentUser, v, " ".join(pmData))	
+				
 				return True
 		return False
 	except IndexError:

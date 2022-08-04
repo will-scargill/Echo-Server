@@ -1,11 +1,13 @@
 import sqlite3
 import datetime, time
+from ssl import CHANNEL_BINDING_TYPES
 
 from colorhash import ColorHash
 
 from objects.models.chatHistory import chatHistory
 from objects.models.chatLogs import chatLogs
 from objects.models.commandLogs import commandLogs
+from objects.models.pmLogs import pmLogs
 
 def logChatHistory(server, user, message, colour):
 	currentDT = datetime.datetime.now()
@@ -69,14 +71,17 @@ def logCommand(server, user, target, command, success):
 def logPM(server, user, target, message):
 	currentDT = datetime.datetime.now()
 	dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-	server.cursor.execute("INSERT INTO pmLogs (eIDSender, senderIP, senderUsername, eIDTarget, targetIP, targetUsername, channel, date, message) VALUES (?,?,?,?,?,?,?,?,?)",[user.eID,		
-		str(user.addr),
-		user.username,
-		target.eID,
-		str(target.addr),
-		target.username,
-		user.channel,
-		dt,
-		message])
-	server.dbconn.commit()
 
+	query = pmLogs.insert().values(
+		eIDSender = user.eID,
+		senderIP = str(user.addr),
+		senderUsername = user.username,
+		eIDTarget = target.eID,
+		targetIP = str(target.addr),
+		targetUsername = target.username,
+		channel = user.channel,
+		date = dt,
+		message = message
+	)
+
+	server.dbconn.execute(query)
