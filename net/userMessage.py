@@ -15,9 +15,7 @@ def handle(conn, addr, currentUser, server, data):
 	elif currentUser.channel == None:
 		pass
 	elif currentUser.isMuted == True:
-		currentDT = datetime.datetime.now()
-		dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-		metadata = ["Server", "#0000FF", dt]
+		metadata = ["Server", "#0000FF", time.time()]
 
 		sendMessage(currentUser.conn, currentUser.secret, "outboundMessage", "You are muted", metadata=metadata)
 	else: # Message

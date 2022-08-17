@@ -19,7 +19,8 @@ def handle(conn, addr, currentUser, server, command):
 			for k, v in server.users.items():
 				if target == v.username:
 					if server.IsValidCommandTarget(currentUser, v):
-						sendMessage(v.conn, v.secret, "connectionTerminated", kickReason, subtype="kick")
+						kickText = "You were kicked: " + kickReason
+						sendMessage(v.conn, v.secret, "connectionTerminated", kickText, subtype="kick")
 
 						logger.info("Client " + str(v.addr) + " was kicked from the server")
 

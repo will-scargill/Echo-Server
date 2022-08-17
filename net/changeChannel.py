@@ -4,34 +4,44 @@ from net.sendMessage import sendMessage
 
 
 def handle(conn, addr, currentUser, server, data):
-	if data["data"] in server.channels:
-		currentUser.timesRequestedHistory = 1
-	
-		oldChannel = None
-		if currentUser.channel == None:
-			firstJoin = True
-		else:
-			firstJoin = False
-			oldChannel = currentUser.channel
-		
-		currentUser.channel = data["data"]
-		server.channels[data["data"]].append(currentUser.eID)
+    if currentUser.isBot:
+        sendMessage(conn, currentUser.secret, "errorOccured", "botUser")
+    elif data["data"] in server.channels:
+        currentUser.timesRequestedHistory = 0
 
-		# Update old channel data
-		if firstJoin == False:
-			server.channels[oldChannel].remove(currentUser.eID)
+        oldChannel = None
+        if currentUser.channel == None:
+            firstJoin = True
+        else:
+            firstJoin = False
+            oldChannel = currentUser.channel
 
-		# Update users in the new channel
+        currentUser.channel = data["data"]
+        server.channels[data["data"]].append(currentUser.eID)
 
-		channelUpdate = [currentUser.username, oldChannel, data["data"]]
-		
-		for user in server.users.items():
-			sendMessage(user[1].conn, user[1].secret, "channelUpdate", json.dumps(channelUpdate))
+        # Update old channel data
+        if firstJoin == False:
+            server.channels[oldChannel].remove(currentUser.eID)
 
-		# Send message history
+        # Update users in the new channel
 
-		channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50);
-		sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory))
+        channelUpdate = [currentUser.username, oldChannel, data["data"]]
 
-	else:
-		sendMessage(conn, currentUser.secret, "errorOccured", "invalidChannel")
+        for user in server.users.items():
+            sendMessage(user[1].conn, user[1].secret, "channelUpdate", json.dumps(channelUpdate))
+
+        # Send message history
+
+        channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50);
+        sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory))
+    elif data["data"] == None:
+        oldChannel = currentUser.channel
+        server.channels[oldChannel].remove(currentUser.eID)
+        currentUser.channel = None
+
+        channelUpdate = [currentUser.username, oldChannel, None]
+
+        for user in server.users.items():
+            sendMessage(user[1].conn, user[1].secret, "channelUpdate", json.dumps(channelUpdate))
+    else:
+        sendMessage(conn, currentUser.secret, "errorOccured", "invalidChannel")
