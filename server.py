@@ -1,21 +1,15 @@
-import socket
-import threading
 import json
 import base64
-import sqlite3
 import select
-import os, sys
-import datetime
+import os
+import sys
 from logzero import logger
 import random
 import string
 from colorhash import ColorHash
-
 from objects import echo, user
 from modules import encoding
-from modules import aes
 from modules import config
-
 from net.sendMessage import sendMessage
 from net import changeChannel
 from net import userMessage
@@ -38,23 +32,24 @@ if not os.path.exists(r"data/key.txt"):
         logger.info("The key can be found in the data folder in your install directory")
         print("-----------------------------")
 
+
 def ClientConnectionThread(conn, addr):
     try:
         logger.info("Client connected from " + str(addr))
 
-        byteData = conn.recv(1024) # Receive serverInfoRequest
+        byteData = conn.recv(1024)  # Receive serverInfoRequest
         data = encoding.DecodePlain(byteData)
 
         sendMessage(conn, "", "serverInfo", server.RSAPublicToSend, enc=False)
 
-        byteData = conn.recv(1024) # Receive clientSecret
+        byteData = conn.recv(1024)  # Receive clientSecret
         data = encoding.DecodePlain(byteData)
 
         userSecret = server.RSAPrivate.decrypt(base64.b64decode(data["data"]))
 
         sendMessage(conn, userSecret, "gotSecret", "")
 
-        byteData = conn.recv(1024) # Receive connectionRequest
+        byteData = conn.recv(1024)  # Receive connectionRequest
         data = encoding.DecodeEncrypted(byteData, userSecret)
 
         connectionRequest = json.loads(data["data"])
@@ -79,17 +74,17 @@ def ClientConnectionThread(conn, addr):
                 currentUser.connectionValid = False
                 logger.warning("Client " + str(addr) + " tried to join but the server was full")
             validPassword = server.Authenticate(connectionRequest[1])
-            if validPassword == False:
+            if validPassword is False:
                 connInvalidReason = "Incorrect Password"
                 currentUser.connectionValid = False
                 logger.warning("Client " + str(addr) + " used incorrect password")
             isNotBanned = server.IsNotBanned(currentUser)
-            if isNotBanned == False:
+            if isNotBanned is False:
                 connInvalidReason = "You are banned from this server"
                 currentUser.connectionValid = False
                 logger.warning("Client " + str(addr) + " tried to join but was banned")
             validID = server.ValidID(currentUser)
-            if validID == False:
+            if validID is False:
                 connInvalidReason = "Invalid eID"
                 currentUser.connectionValid = False
                 logger.warning("Client " + str(addr) + " tried to join but was already connected from the same device")
@@ -104,7 +99,7 @@ def ClientConnectionThread(conn, addr):
         logger.error("Client " + str(addr) + " disconnected during handshake")
         currentUser.connectionValid = False
 
-    if currentUser.connectionValid == True:
+    if currentUser.connectionValid is True:
         try:
             sendMessage(conn, userSecret, "CRAccepted", "")
             for u in server.users.items():
@@ -142,17 +137,18 @@ def ClientConnectionThread(conn, addr):
             disconnect.handle(conn, addr, currentUser, server, data)
             currentUser.connectionValid = False
         except ConnectionAbortedError as e:
-            if currentUser.connectionValid == False:
+            if currentUser.connectionValid is False:
                 pass
             else:
                 logger.error(e)
     else:
-        logger.warning("Client " + str(addr) + " failed handshake");
+        logger.warning("Client " + str(addr) + " failed handshake")
         sendMessage(conn, userSecret, "CRDenied", connInvalidReason)
         conn.close()
 
     conn.close()
-    logger.info("Client " + str(addr) + " connection closed");
+    logger.info("Client " + str(addr) + " connection closed")
+
 
 name = config.GetSetting("name", "Server")
 channels = config.GetSetting("channels", "Server")
@@ -168,7 +164,6 @@ strictBanning = config.GetSetting("strictBanning", "Server")
 logger.info("Config loaded")
 
 server = echo.Echo(name, "", host, port, password, channels, motd, clientnums, compatibleClientVers, strictBanning)
-#server.initDB()
 server.initAlchemy()
 server.StartServer(ClientConnectionThread)
 

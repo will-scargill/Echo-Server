@@ -1,10 +1,9 @@
 import json
 import time
 import ast
-
 from net.sendMessage import sendMessage
-
 from objects.models.userRoles import userRoles
+
 
 def handle(conn, addr, currentUser, server, command):
     try:
@@ -13,14 +12,14 @@ def handle(conn, addr, currentUser, server, command):
         userData.append("eID: " + currentUser.eID)
         userAddr = str("IP: " + currentUser.addr[0]) + ":" + str(currentUser.addr[1])
         userData.append(userAddr)
-        if currentUser.channel == None:
-                userData.append("No channel")
+        if currentUser.channel is None:
+            userData.append("No channel")
         else:
-                userData.append("Channel: " + currentUser.channel)
-                
-        query = userRoles.select().where(userRoles.c.eID == currentUser.eID) 
+            userData.append("Channel: " + currentUser.channel)
+
+        query = userRoles.select().where(userRoles.c.eID == currentUser.eID)
         roleData = (server.dbconn.execute(query)).fetchone()
-        if roleData == None:
+        if roleData is None:
             pass
         else:
             roleData = ast.literal_eval(roleData[1])
@@ -32,7 +31,8 @@ def handle(conn, addr, currentUser, server, command):
         sendMessage(currentUser.conn, currentUser.secret, "commandData", json.dumps(userData), subtype="multiLine", metadata=metadata)
         return True
     except IndexError:
-            return False
+        return False
+
 
 def gethelp():
     return "self : usage : /self"
