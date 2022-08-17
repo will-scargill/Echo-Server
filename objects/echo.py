@@ -1,25 +1,17 @@
-from logging import setLogRecordFactory
 import socket
 import threading
 import json
-import sqlite3
-from sqlite3 import OperationalError
-from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, select, text
-from sqlalchemy import and_, or_
-
+from sqlalchemy import create_engine, text, or_
 from logzero import logger
 import datetime
 import os
 import ast
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Cipher import AES
-
 from modules import commandParser
 from modules import config
 from modules import encoding
 from net.sendMessage import sendMessage
-
 from objects.models.bannedUsers import bannedUsers
 from objects.models.chatHistory import chatHistory
 from objects.models.chatLogs import chatLogs
@@ -27,6 +19,7 @@ from objects.models.commandLogs import commandLogs
 from objects.models.pmLogs import pmLogs
 from objects.models.userRoles import userRoles
 from objects.models.botTokens import botTokens
+
 
 class Echo():
     def __init__(self, name, ip, host, port, password, channels, motd, nums, compatibleClientVers, strictBanning):
@@ -68,29 +61,29 @@ class Echo():
         except FileNotFoundError:
             logger.warning("Blacklist file not found, proceeding with empty blacklist")
 
-        try: # Try to read data from RSA keys to check if they exist
+        try:  # Try to read data from RSA keys to check if they exist
             fileIn = open(r"data/public.pem", "rb")
             fileIn.close()
             fileIn = open(r"data/private.pem", "rb")
             fileIn.close()
-        except: # If they don't, generate RSA keys
+        except FileNotFoundError:  # If they don't, generate RSA keys
             logger.warning("Rsa keys not found, generating...")
             exec(open("regenerateRsaKeys.py").read())
 
-        fileIn = open(r"data/private.pem", "rb") # Read private key
+        fileIn = open(r"data/private.pem", "rb")  # Read private key
         bytesIn = fileIn.read()
         private = RSA.import_key(bytesIn)
         fileIn.close()
 
-        fileIn = open(r"data/public.pem", "rb") # Read public key
+        fileIn = open(r"data/public.pem", "rb")  # Read public key
         bytesIn = fileIn.read()
         public = RSA.import_key(bytesIn)
         fileIn.close()
 
         self.RSAPublicToSend = bytesIn.decode('utf-8')
 
-        self.RSAPublic = PKCS1_OAEP.new(public) # Setup public key encryption object
-        self.RSAPrivate = PKCS1_OAEP.new(private) # Setup private key encryption object
+        self.RSAPublic = PKCS1_OAEP.new(public)  # Setup public key encryption object
+        self.RSAPrivate = PKCS1_OAEP.new(private)  # Setup private key encryption object
 
         commandParser.init()
 
@@ -98,7 +91,7 @@ class Echo():
         self.serverSocket.bind((self.ip, int(self.port)))
         logger.info("Listening on " + str(self.host) + ":" + str(self.port) + "(" + str(self.numClients) + " clients)")
 
-        self.listenerDaemon = threading.Thread(target=Listener, args=(self,clientConnectionThread))
+        self.listenerDaemon = threading.Thread(target=Listener, args=(self, clientConnectionThread))
         self.listenerDaemon.daemon = True
         self.listenerDaemon.start()
 
@@ -116,8 +109,6 @@ class Echo():
             dbName = os.environ.get("ECHO_MYSQL_DB")
             self.engine = create_engine("mysql+pymysql://{0}:{1}@{2}/{3}".format(dbUser, dbPass, dbHost, dbName))
 
-        meta = MetaData()
-
         bannedUsers.create(self.engine, checkfirst=True)
         chatHistory.create(self.engine, checkfirst=True)
         chatLogs.create(self.engine, checkfirst=True)
@@ -125,8 +116,6 @@ class Echo():
         pmLogs.create(self.engine, checkfirst=True)
         userRoles.create(self.engine, checkfirst=True)
         botTokens.create(self.engine, checkfirst=True)
-
-        #meta.create_all(self.engine)
 
         self.dbconn = self.engine.connect()
 
@@ -140,7 +129,7 @@ class Echo():
         self.users[user.eID] = user
 
     def Authenticate(self, userPassword):
-        if self.password == None:
+        if self.password is None:
             return True
 
         if userPassword == "":
@@ -155,7 +144,7 @@ class Echo():
         query = botTokens.select().where(botTokens.c.token == token)
         matchingToken = (self.dbconn.execute(query)).fetchone()
 
-        if matchingToken != None:
+        if matchingToken is not None:
             return True
         else:
             return False
@@ -192,7 +181,7 @@ class Echo():
         else:
             query = bannedUsers.select().where(bannedUsers.c.eID == user.eID)
             matchingUsers = (self.dbconn.execute(query)).fetchone()
-        if matchingUsers != None:
+        if matchingUsers is not None:
             return False
         else:
             return True
@@ -228,7 +217,7 @@ class Echo():
 
             query = userRoles.select().where(userRoles.c.eID == user.eID)
             roleData = (self.dbconn.execute(query)).fetchone()
-            if roleData == None:
+            if roleData is None:
                 return False
             roleData = ast.literal_eval(roleData[1])
             try:
@@ -259,7 +248,7 @@ class Echo():
         channelHistory = (self.dbconn.execute(query, a=channel)).fetchall()
         return encoding.reformatData(channelHistory)
 
-    def GetUserFromName(self, username): # Returns the user object
+    def GetUserFromName(self, username):  # Returns the user object
         for user in self.users.values():
             if user.username == username:
                 return user
@@ -272,13 +261,13 @@ class Echo():
 
         query = userRoles.select().where(userRoles.c.eID == user.eID)
         roleData = (self.dbconn.execute(query)).fetchone()
-        if roleData == None:
+        if roleData is None:
             return False
         roleData = ast.literal_eval(roleData[1])
 
         query = userRoles.select().where(userRoles.c.eID == target.eID)
         targetRoles = (self.dbconn.execute(query)).fetchone()
-        if targetRoles == None: # target has no roles
+        if targetRoles is None:  # target has no roles
             return True
         targetRoles = ast.literal_eval(targetRoles[1])
 
@@ -301,7 +290,7 @@ class Echo():
                 return False
             else:
                 return True
-        except ValueError: # target has no roles
+        except ValueError:  # target has no roles
             return True
 
     def GetUserHeir(self, user):
@@ -312,7 +301,7 @@ class Echo():
         query = userRoles.select().where(userRoles.c.eID == user.eID)
         roleData = (self.dbconn.execute(query)).fetchone()
         roleData = ast.literal_eval(roleData[1])
-        if roleData == None:
+        if roleData is None:
             return False
 
         userRoleRankings = []
@@ -323,7 +312,7 @@ class Echo():
                 logger.error("eID " + user.eID + " has an invalid role - " + role)
         try:
             return max(userRoleRankings)
-        except ValueError: # target has no roles
+        except ValueError:  # target has no roles
             return 0
 
     def ServerMessage(self, user, content):
@@ -342,10 +331,11 @@ class Echo():
                 return False
         return True
 
+
 def Listener(server, clientConnectionThread):
     server.serverSocket.listen(5)
-    while server.recvControl == True:
+    while server.recvControl is True:
         conn, addr = server.serverSocket.accept()
-        threading.Thread(target=clientConnectionThread, args=(conn,addr)).start() # Start a new thread for the client
+        threading.Thread(target=clientConnectionThread, args=(conn, addr)).start()  # Start a new thread for the client
     server.serverSocket.shutdown(socket.SHUT_RDWR)
     server.serverSocket.close()

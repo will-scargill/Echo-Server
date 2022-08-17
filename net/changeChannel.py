@@ -1,5 +1,4 @@
 import json
-
 from net.sendMessage import sendMessage
 
 
@@ -10,7 +9,7 @@ def handle(conn, addr, currentUser, server, data):
         currentUser.timesRequestedHistory = 0
 
         oldChannel = None
-        if currentUser.channel == None:
+        if currentUser.channel is None:
             firstJoin = True
         else:
             firstJoin = False
@@ -20,7 +19,7 @@ def handle(conn, addr, currentUser, server, data):
         server.channels[data["data"]].append(currentUser.eID)
 
         # Update old channel data
-        if firstJoin == False:
+        if firstJoin is False:
             server.channels[oldChannel].remove(currentUser.eID)
 
         # Update users in the new channel
@@ -32,9 +31,9 @@ def handle(conn, addr, currentUser, server, data):
 
         # Send message history
 
-        channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50);
+        channelHistory = server.GetBasicChannelHistory(currentUser.channel, 50)
         sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory))
-    elif data["data"] == None:
+    elif data["data"] is None:
         oldChannel = currentUser.channel
         server.channels[oldChannel].remove(currentUser.eID)
         currentUser.channel = None

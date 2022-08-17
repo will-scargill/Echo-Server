@@ -1,6 +1,5 @@
 import json
 from colorhash import ColorHash
-
 from net.sendMessage import sendMessage
 
 
@@ -12,4 +11,3 @@ def handle(conn, addr, currentUser, server, data):
     dataToSend.append(json.dumps(clientList))
     dataToSend = json.dumps(dataToSend)
     sendMessage(conn, currentUser.secret, "serverData", dataToSend)
-	
