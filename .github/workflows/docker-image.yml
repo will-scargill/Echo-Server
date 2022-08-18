@@ -38,5 +38,5 @@ jobs:
             --platform linux/amd64,linux/arm64 \
             --output "type=image,push=true" \
             --tag ghcr.io/will-scargill/echo:latest \
-            --tag gchr.io/will-scargill/echo:${{ steps.vars.outputs.version }} \
+            --tag gchr.io/will-scargill/echo:${{ steps.getversion.outputs.version }} \
             ./
