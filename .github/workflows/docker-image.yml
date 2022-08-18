@@ -29,4 +29,4 @@ jobs:
           context: .
           platforms: linux/amd64 , linux/arm64
           push: true
-          tags: ghcr.io/will-scargill/echo:latest , ghcr.io/will-scargill/echo:${{ steps.getversion.outputs.version }}
+          tags: will-scargill/echo:latest , will-scargill/echo:${{ steps.getversion.outputs.version }}
