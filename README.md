@@ -76,8 +76,11 @@ Most settings are self-explanatory.
 <b> Do not change serverVersion and CompatibleClientVers. This will break your server. </b>
 
 clientnum - the maximum number of clients that can connect at once
+
 strictBanning - bans use IP as well as Echo IDs
+
 useBlacklist - Enables/disables the word blacklist
+
 kickOnUse - Kicks a user when they attempt to use a word on the blacklist
 
 - ### [blacklist.txt](https://github.com/will-scargill/Echo-Server/blob/master/configs/blacklist.txt)
@@ -91,9 +94,11 @@ Do not change this file. More functionality to be added later.
 - ### [roles.json](https://github.com/will-scargill/Echo-Server/blob/master/configs/roles.json)
 
 New roles can be added in the following format
-    ```
+
+
     "role_name": ["heirarchy_value", "command flag 1", "command flag 2"]
-    ```
+
+    
 The heirarchy value determines which roles can target other roles. A lower heirarchy value cannot target a higher one. 
 The command flags and their corresponding commands can be found in [roles.json](https://github.com/will-scargill/Echo-Server/blob/master/configs/roles.json).
 
