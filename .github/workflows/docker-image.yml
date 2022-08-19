@@ -3,6 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: [ master ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   release:
@@ -29,5 +31,5 @@ jobs:
         with:
           context: .
           platforms: linux/amd64 , linux/arm64
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/will-scargill/echo:latest , ghcr.io/will-scargill/echo:${{ steps.getversion.outputs.version }}
