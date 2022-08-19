@@ -17,6 +17,9 @@
   <a href="https://github.com/will-scargill/echo">
     Echo Client
   </a>
+  <a href="https://github.com/will-scargill/echo-server">
+     | Echo Server
+  </a>
 </p>
 
 ## Getting started
