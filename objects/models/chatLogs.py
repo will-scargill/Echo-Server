@@ -4,10 +4,10 @@ meta = MetaData()
 
 chatLogs = Table(
     "chatLogs", meta,
-    Column("eID", String),
-    Column("IP", String),
-    Column("username", String),
-    Column("channel", String),
-    Column("date", String),
-    Column("message", String)
+    Column("eID", String(64)),
+    Column("IP", String(15)),
+    Column("username", String(64)),
+    Column("channel", String(64)),
+    Column("date", String(64)),
+    Column("message", String(256))
 )

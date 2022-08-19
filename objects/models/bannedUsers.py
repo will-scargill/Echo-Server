@@ -4,8 +4,8 @@ meta = MetaData()
 
 bannedUsers = Table(
     "bannedUsers", meta,
-    Column("eID", String),
-    Column("IP", String),
-    Column("dateBanned", String),
-    Column("reason", String)
+    Column("eID", String(64)),
+    Column("IP", String(15)),
+    Column("dateBanned", String(20)),
+    Column("reason", String(100))
 )
