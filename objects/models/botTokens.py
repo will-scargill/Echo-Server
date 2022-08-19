@@ -5,5 +5,5 @@ meta = MetaData()
 botTokens = Table(
     "botTokens", meta,
     Column("id", Integer, primary_key=True),
-    Column("token", String)
+    Column("token", String(64))
 )

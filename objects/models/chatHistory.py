@@ -4,10 +4,10 @@ meta = MetaData()
 
 chatHistory = Table(
     "chatHistory", meta,
-    Column("username", String),
-    Column("channel", String),
-    Column("date", String),
-    Column("message", String),
-    Column("colour", String),
+    Column("username", String(64)),
+    Column("channel", String(64)),
+    Column("date", String(64)),
+    Column("message", String(256)),
+    Column("colour", String(64)),
     Column("realtime", Integer),
 )
