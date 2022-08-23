@@ -167,7 +167,7 @@ server = echo.Echo(name, "", host, port, password, channels, motd, clientnums, c
 server.initAlchemy()
 server.StartServer(ClientConnectionThread)
 
-live_server = os.environ.get("ECHO_MYSQL_DB")
+live_server = os.environ.get("ECHO_LIVE")
 if not live_server:
     userInp = input("")
     if userInp == "q":
