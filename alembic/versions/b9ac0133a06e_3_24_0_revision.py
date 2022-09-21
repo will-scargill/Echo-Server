@@ -1,7 +1,7 @@
 """3.24.0 Revision
 
 Revision ID: b9ac0133a06e
-Revises: 
+Revises:
 Create Date: 2022-09-20 14:37:55.226426
 
 """

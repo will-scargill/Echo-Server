@@ -3,7 +3,6 @@ import threading
 import json
 from sqlalchemy import create_engine, text, or_
 from logzero import logger
-import datetime
 import time
 import os
 import ast
@@ -317,8 +316,6 @@ class Echo():
             return 0
 
     def ServerMessage(self, user, content):
-        currentDT = datetime.datetime.now()
-        dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
         metadata = ["Server", "#0000FF", time.time()]
 
         sendMessage(user.conn, user.secret, "outboundMessage", content, metadata=metadata)

@@ -1,7 +1,7 @@
 from logging.config import fileConfig
 import os
-from dotenv import load_dotenv
-from sqlalchemy import engine_from_config, pool, create_engine
+# from dotenv import load_dotenv # for dev
+from sqlalchemy import create_engine
 
 from alembic import context
 
@@ -25,6 +25,7 @@ target_metadata = None
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+
 def get_url():
     # load_dotenv() # for dev when not in container
     dbType = os.environ.get("ECHO_DB_TYPE")
@@ -36,6 +37,7 @@ def get_url():
         dbPass = os.environ.get("ECHO_MYSQL_PASS")
         dbName = os.environ.get("ECHO_MYSQL_DB")
         return "mysql+pymysql://{0}:{1}@{2}/{3}".format(dbUser, dbPass, dbHost, dbName)
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -67,7 +69,7 @@ def run_migrations_online() -> None:
     In this scenario we need to create an Engine
     and associate a connection with the context.
     """
-    
+
     connectable = create_engine(get_url())
 
     with connectable.connect() as connection:
