@@ -6,6 +6,8 @@ import sys
 from logzero import logger
 import random
 import string
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
 from colorhash import ColorHash
 from objects import echo, user
 from modules import encoding
@@ -40,6 +42,10 @@ def ClientConnectionThread(conn, addr):
         byteData = conn.recv(1024)  # Receive serverInfoRequest
         data = encoding.DecodePlain(byteData)
 
+        publicKeyString = data["data"]
+        public = RSA.import_key(data["data"])
+        userPublicKey = PKCS1_OAEP.new(public)
+
         sendMessage(conn, "", "serverInfo", server.RSAPublicToSend, enc=False)
 
         byteData = conn.recv(1024)  # Receive clientSecret
@@ -47,19 +53,22 @@ def ClientConnectionThread(conn, addr):
 
         userSecret = server.RSAPrivate.decrypt(base64.b64decode(data["data"]))
 
-        sendMessage(conn, userSecret, "gotSecret", "")
+        token = ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(16))
+        tokenEncrypted = base64.b64encode(userPublicKey.encrypt(token.encode('utf-8'))).decode('utf-8')
+
+        sendMessage(conn, userSecret, "gotSecret", tokenEncrypted)
 
         byteData = conn.recv(1024)  # Receive connectionRequest
         data = encoding.DecodeEncrypted(byteData, userSecret)
 
         connectionRequest = json.loads(data["data"])
 
-        currentUser = user.User(data["userid"], connectionRequest[0], userSecret, addr, conn)
+        currentUser = user.User(data["userid"], connectionRequest[0], userSecret, publicKeyString, addr, conn)
 
         currentUser.connectionValid = True
         isServerFull = server.IsServerFull()
 
-        if bool(connectionRequest[3]):
+        if bool(connectionRequest[4]):
             validBot = server.AuthenticateBot(connectionRequest[1])
             if validBot:
                 logger.info("Bot connected from " + str(addr))
@@ -92,6 +101,10 @@ def ClientConnectionThread(conn, addr):
                 connInvalidReason = "Incompatible Client version"
                 currentUser.connectionValid = False
                 logger.warning("Client " + str(addr) + " tried to join but was has an incompatible client version")
+            if connectionRequest[3] != token:
+                connInvalidReason = "Failed Key Verification"
+                currentUser.connectionValid = False
+                logger.warning("Client " + str(addr) + " tried to join but failed to verify their public key")
         validUsername = server.ValidUsername(currentUser)
         currentUser.username = validUsername
 

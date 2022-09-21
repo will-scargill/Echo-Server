@@ -109,6 +109,10 @@ The command flag * is special. It grants a role permission to use <b> any </b> c
 <br>
 <b> This flag is only given to the "admin" role by default. Be careful when giving it to other roles! </b>
 
+## Upgrading
+
+TBA
+
 ## Misc
 
 ### regenerateRsaKeys.py

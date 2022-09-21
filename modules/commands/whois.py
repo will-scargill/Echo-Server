@@ -20,7 +20,7 @@ def handle(conn, addr, currentUser, server, command):
                 else:
                     userData.append("Channel: " + v.channel)
 
-                query = userRoles.select().where(userRoles.c.eID == v.eID)
+                query = userRoles.select().where(userRoles.c.publicKey == v.publickey)
                 allUserRoles = (server.dbconn.execute(query)).fetchone()
                 if allUserRoles is not None:
                     allUserRoles = ast.literal_eval(allUserRoles[1])

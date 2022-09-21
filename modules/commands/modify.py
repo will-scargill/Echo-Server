@@ -16,7 +16,7 @@ def handle(conn, addr, currentUser, server, command):
                         with open(r"configs/roles.json", "r") as roleFile:
                             roleList = json.load(roleFile)
 
-                        query = userRolesObj.select().where(userRolesObj.c.eID == v.eID)
+                        query = userRolesObj.select().where(userRolesObj.c.publicKey == v.publickey)
 
                         try:
                             userRoles = (server.dbconn.execute(query)).fetchone()
@@ -52,7 +52,7 @@ def handle(conn, addr, currentUser, server, command):
                                 except ValueError:
                                     pass
 
-                        query = userRolesObj.update().where(userRolesObj.c.eID == v.eID).values(roles=json.dumps(userRoles))
+                        query = userRolesObj.update().where(userRolesObj.c.publicKey == v.publickey).values(roles=json.dumps(userRoles))
                         server.dbconn.execute(query)
 
                         server.ServerMessage(currentUser, "User " + v.username + "'s roles were modified")
