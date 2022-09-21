@@ -4,6 +4,6 @@ meta = MetaData()
 
 userRoles = Table(
     "userRoles", meta,
-    Column("eID", String(64)),
+    Column("publicKey", String(300)),
     Column("roles", String(256))
 )

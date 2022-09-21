@@ -4,6 +4,7 @@ import json
 from sqlalchemy import create_engine, text, or_
 from logzero import logger
 import datetime
+import time
 import os
 import ast
 from Crypto.PublicKey import RSA
@@ -215,7 +216,7 @@ class Echo():
         with open(r"configs/roles.json", "r") as roleFile:
             roleList = json.load(roleFile)
 
-            query = userRoles.select().where(userRoles.c.eID == user.eID)
+            query = userRoles.select().where(userRoles.c.publicKey == user.publickey)
             roleData = (self.dbconn.execute(query)).fetchone()
             if roleData is None:
                 return False
@@ -259,13 +260,13 @@ class Echo():
         with open(r"configs/roles.json", "r") as roleFile:
             roleList = json.load(roleFile)
 
-        query = userRoles.select().where(userRoles.c.eID == user.eID)
+        query = userRoles.select().where(userRoles.c.publicKey == user.publickey)
         roleData = (self.dbconn.execute(query)).fetchone()
         if roleData is None:
             return False
         roleData = ast.literal_eval(roleData[1])
 
-        query = userRoles.select().where(userRoles.c.eID == target.eID)
+        query = userRoles.select().where(userRoles.c.publicKey == target.publickey)
         targetRoles = (self.dbconn.execute(query)).fetchone()
         if targetRoles is None:  # target has no roles
             return True
@@ -298,7 +299,7 @@ class Echo():
         with open(r"configs/roles.json", "r") as roleFile:
             roleList = json.load(roleFile)
 
-        query = userRoles.select().where(userRoles.c.eID == user.eID)
+        query = userRoles.select().where(userRoles.c.publicKey == user.publickey)
         roleData = (self.dbconn.execute(query)).fetchone()
         roleData = ast.literal_eval(roleData[1])
         if roleData is None:
@@ -318,7 +319,7 @@ class Echo():
     def ServerMessage(self, user, content):
         currentDT = datetime.datetime.now()
         dt = str(currentDT.strftime("%d-%m-%Y %H:%M:%S"))
-        metadata = ["Server", "#0000FF", dt]
+        metadata = ["Server", "#0000FF", time.time()]
 
         sendMessage(user.conn, user.secret, "outboundMessage", content, metadata=metadata)
 

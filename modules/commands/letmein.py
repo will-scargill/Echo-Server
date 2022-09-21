@@ -11,7 +11,7 @@ def handle(conn, addr, currentUser, server, command):
             return False
         elif key == command[1]:
             query = userRoles.insert().values(
-                eID=currentUser.eID,
+                publicKey=currentUser.publickey,
                 roles='["admin"]'
             )
             server.dbconn.execute(query)

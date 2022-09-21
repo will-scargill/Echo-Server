@@ -42,6 +42,7 @@ def ClientConnectionThread(conn, addr):
         byteData = conn.recv(1024)  # Receive serverInfoRequest
         data = encoding.DecodePlain(byteData)
 
+        publicKeyString = data["data"]
         public = RSA.import_key(data["data"])
         userPublicKey = PKCS1_OAEP.new(public)
 
@@ -62,7 +63,7 @@ def ClientConnectionThread(conn, addr):
 
         connectionRequest = json.loads(data["data"])
 
-        currentUser = user.User(data["userid"], connectionRequest[0], userSecret, userPublicKey, addr, conn)
+        currentUser = user.User(data["userid"], connectionRequest[0], userSecret, publicKeyString, addr, conn)
 
         currentUser.connectionValid = True
         isServerFull = server.IsServerFull()
