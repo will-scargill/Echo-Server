@@ -35,7 +35,10 @@ def handle(conn, addr, currentUser, server, data):
         sendMessage(currentUser.conn, currentUser.secret, "channelHistory", json.dumps(channelHistory))
     elif data["data"] is None:
         oldChannel = currentUser.channel
-        server.channels[oldChannel].remove(currentUser.eID)
+        try:
+            server.channels[oldChannel].remove(currentUser.eID)
+        except KeyError:
+            pass # Investigate cause later
         currentUser.channel = None
 
         channelUpdate = [currentUser.username, oldChannel, None]
