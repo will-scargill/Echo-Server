@@ -38,7 +38,7 @@ def handle(conn, addr, currentUser, server, data):
         try:
             server.channels[oldChannel].remove(currentUser.eID)
         except KeyError:
-            pass # Investigate cause later
+            pass  # Investigate cause later
         currentUser.channel = None
 
         channelUpdate = [currentUser.username, oldChannel, None]
