@@ -9,7 +9,7 @@ logzero==1.7.0
 Mako==1.2.2
 MarkupSafe==2.1.1
 pycparser==2.21
-pycryptodome==3.14.1
+pycryptodome==3.19.1
 PyMySQL==1.0.2
 python-dotenv==0.21.0
 reindent==3.5.1
