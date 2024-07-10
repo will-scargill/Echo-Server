@@ -14,5 +14,5 @@ PyMySQL==1.0.2
 python-dotenv==0.21.0
 reindent==3.5.1
 SQLAlchemy==1.4.31
-zipp==3.8.1
+zipp==3.19.1
 setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
